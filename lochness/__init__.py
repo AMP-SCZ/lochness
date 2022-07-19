@@ -166,7 +166,7 @@ def _subjects(Lochness, study, general_folder, protected_folder, metadata_file):
         phoenix_id = row['Subject ID'].strip()
 
         # these columns are optional
-        phoenix_study = row.get('Study', study).strip()
+        phoenix_study = study
 
         saliva = dict()
         if 'Saliva' in row:

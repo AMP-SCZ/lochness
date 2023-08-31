@@ -162,6 +162,7 @@ class KeyringAndEncrypt():
         token = Tokens()
         api_token, url = token.read_token_or_get_input('redcap_fake')
 
+        self.keyring[f'redcap.{study}'] = {}
         self.keyring[f'redcap.{study}']['URL'] = url
         self.keyring[f'redcap.{study}']['API_TOKEN'] = {study: api_token}
 

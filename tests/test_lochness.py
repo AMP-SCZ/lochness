@@ -203,6 +203,7 @@ def config_load_test(f: 'location', archive_base=None):
     # box file pattern strings from the config to string template
     # regardless of the selected study in the args
     if 'box' in Lochness:
+        print(Lochness['box'])
         for _, study_dict in Lochness['box'].items():
             for _, modality_values in study_dict['file_patterns'].items():
                 for modality_dict in modality_values:

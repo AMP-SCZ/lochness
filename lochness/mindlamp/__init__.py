@@ -181,9 +181,14 @@ def sync(Lochness: 'lochness.config',
 
             # pull data from mindlamp
             begin = time.time()
-            data_dict = function_to_execute(LAMP, subject_id,
-                                            from_ts=time_utc_00_ts,
-                                            to_ts=time_utc_24_ts)
+            try:
+                data_dict = function_to_execute(LAMP, subject_id,
+                                                from_ts=time_utc_00_ts,
+                                                to_ts=time_utc_24_ts)
+            except Exception as e:
+                print(e)
+                continue
+
             end = time.time()
             logger.debug(
                 f'Mindlamp {subject_id} {date_str} {data_name} data pull'

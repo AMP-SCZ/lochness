@@ -123,7 +123,7 @@ def main():
     # replace args.source with corresponding lochness modules
     if args.source:
         args.input_sources = args.source
-        args.source = list(set([SOURCES[x] for x in args.source]))
+        args.source = [SOURCES[x] for x in args.source]
     else:
         args.input_sources = []
 
@@ -201,7 +201,7 @@ def main():
 
         # email
         if args.daily_summary:
-            check_source(Lochness)
+            send_out_daily_updates(Lochness)
             if args.check_source:
                 check_source(Lochness)
 
@@ -241,8 +241,13 @@ def do(args, Lochness):
             for Module in args.hdd:
                 lochness.attempt(Module.sync, Lochness, subject, dry=args.dry)
         else:
-            for Module in args.source:
-                lochness.attempt(Module.sync, Lochness, subject, dry=args.dry)
+            for source, Module in zip(args.input_sources, args.source):
+                if source == 'xnat':
+                    lochness.attempt(Module.sync_xnatpy, Lochness,
+                                     subject, dry=args.dry)
+                else:
+                    lochness.attempt(Module.sync, Lochness,
+                                     subject, dry=args.dry)
         n += 1
 
     # anonymize PII

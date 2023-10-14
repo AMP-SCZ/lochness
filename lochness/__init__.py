@@ -100,10 +100,15 @@ def initialize_metadata(Lochness, args,
         elif 'redcap' in args.input_sources:
             id_fieldname = Lochness['redcap_id_colname']
             consent_fieldname = Lochness['redcap_consent_colname']
-            REDCap.initialize_metadata(
-                    Lochness, study_name, id_fieldname, consent_fieldname,
-                    multiple_site_in_a_repo, upenn_redcap)
-
+            try:
+                REDCap.initialize_metadata(
+                        Lochness, study_name, id_fieldname, consent_fieldname,
+                        multiple_site_in_a_repo, upenn_redcap)
+            except lochness.redcap.REDCapError as e:
+                logger.debug('REDCap not accessible')
+                logger.debug(e)
+                print('REDCap not accessible')
+                continue
         else:
             pass
 

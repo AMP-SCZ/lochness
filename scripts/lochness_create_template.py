@@ -438,7 +438,7 @@ AWS_BUCKET_ROOT: TEST_PHOENIX_ROOT_PRONET'''
                    - product: transcripts
                      data_dir: {study}_Interviews/transcripts/Approved
                      out_dir: transcripts
-                     pattern: '*.txt
+                     pattern: '*.txt'
              '''
 
             config_example += line_to_add

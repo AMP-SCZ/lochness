@@ -167,7 +167,12 @@ def is_transferred_and_removed(Lochness,
         bool: True if removed previously
     '''
     if removed_df_loc is None:
-        removed_df_loc = Path(Lochness['removed_df_loc'])
+        try:
+            removed_df_loc = Path(Lochness['removed_df_loc'])
+        except KeyError:
+            removed_df_loc = 'not_defined'
+
+
 
     if Path(removed_df_loc).is_file():
         df_removed = pd.read_csv(removed_df_loc, index_col=0)

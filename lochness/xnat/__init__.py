@@ -1,9 +1,11 @@
 import os
 import yaml
 import uuid
+import xnat
 import yaxil
-import lochness
+import shutil
 import logging
+import lochness
 import tempfile as tf
 import collections as col
 from pathlib import Path
@@ -16,6 +18,7 @@ yaml.SafeDumper.add_representer(
         col.OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
 logger = logging.getLogger(__name__)
+
 
 @net.retry(max_attempts=5)
 def sync_old(Lochness, subject, dry=False):
@@ -30,7 +33,7 @@ def sync_old(Lochness, subject, dry=False):
         upper case IDs if the data for one ID do not exist, experiments(auth,
         xnat_uid) returns nothing preventing the execution of inner loop
         '''
-        _xnat_uids= xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
+        _xnat_uids = xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
         for xnat_uid in _xnat_uids:
             for experiment in experiments(auth, xnat_uid):
                 logger.info(experiment)
@@ -57,9 +60,9 @@ def sync_old(Lochness, subject, dry=False):
                                   'it does not match the data on XNAT.' \
                                   'Please check MRI data saved in {dst} and ' \
                                   'compared to the XNAT data.'
-                            
+
                         lochness.notify(Lochness, message, study=subject.study)
-                        #lochness.backup(dst)
+                        # lochness.backup(dst)
                         continue
 
                 message = 'downloading {PROJECT}/{LABEL} to {FOLDER}'
@@ -80,7 +83,6 @@ def sync_old(Lochness, subject, dry=False):
                     os.rename(tmpdir, dst)
 
 
-
 @net.retry(max_attempts=5)
 def sync(Lochness, subject, dry=False):
     logger.debug('exploring {0}/{1}'.format(subject.study, subject.id))
@@ -94,7 +96,7 @@ def sync(Lochness, subject, dry=False):
         upper case IDs if the data for one ID do not exist, experiments(auth,
         xnat_uid) returns nothing preventing the execution of inner loop
         '''
-        _xnat_uids= xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
+        _xnat_uids = xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
         for xnat_uid in _xnat_uids:
             for experiment in experiments(auth, xnat_uid):
                 logger.info(experiment)
@@ -134,6 +136,98 @@ def sync(Lochness, subject, dry=False):
                     save_experiment_file(dirname, auth.url, experiment)
                     with open(archieved_date_log, 'w') as fp:
                         fp.write(archieved_date)
+
+
+class NoMatchingSubjectXNAT(Exception):
+    pass
+
+
+def set_TMPDIR(Lochness):
+    try:
+        tmp_dir = Lochness['tmp_dir']
+    except KeyError:
+        tmp_dir = os.environ.get('TMPDIR')
+        if tmp_dir is None:
+            tmp_dir = tf.gettempdir()
+
+    # Set the TMPDIR environment variable to a default value
+    os.environ['TMPDIR'] = tmp_dir
+
+    return tmp_dir
+
+
+@net.retry(max_attempts=5)
+def sync_xnatpy(Lochness, subject, dry=False):
+    """A new sync function with XNATpy"""
+    logger.debug('exploring {0}/{1}'.format(subject.study, subject.id))
+
+    tmp_dir = set_TMPDIR(Lochness)
+
+    # remove xnatpy tmp files
+    for tmp_file in Path(tmp_dir).glob('*generated_xnat.py'):
+        os.remove(tmp_file)
+
+    for tmp_file in Path(tmp_dir).glob('tmp_xnat*'):
+        os.remove(tmp_file)
+
+    for alias, xnat_uids in iter(subject.xnat.items()):
+        keyring = Lochness['keyring'][alias]
+        session = xnat.connect(keyring['URL'],
+                               keyring['USERNAME'],
+                               keyring['PASSWORD'])
+        '''
+        pull XNAT data agnostic to the case of subject IDs loop over lower and
+        upper case IDs if the data for one ID do not exist, experiments(auth,
+        xnat_uid) returns nothing preventing the execution of inner loop
+        '''
+        site = xnat_uids[0][1][:2]
+        _xnat_uids = [(x[0], x[1].upper()) for x in xnat_uids] + \
+                     [(x[0], x[1].lower()) for x in xnat_uids]
+
+        for ses in session.projects:
+            if 'pronet' in ses.lower():
+                if site in ses:
+                    break
+
+        project = session.projects[ses]
+        xnat_subject = ''
+        for xnat_uid in _xnat_uids:
+            try:
+                xnat_subject = project.subjects[xnat_uid[1]]
+                break
+            except KeyError as e:
+                continue
+
+        if xnat_subject == '':
+            msg = 'There is no matching subject in XNAT database: '
+            msg += f"{' / '.join([x[1] for x in _xnat_uids])}"
+            logger.debug(msg)
+            continue
+
+        for exp_id, experiment in xnat_subject.experiments.items():
+            dirname = tree.get('mri',
+                               subject.protected_folder,
+                               processed=False,
+                               BIDS=Lochness['BIDS'])
+            dst = os.path.join(dirname, f'{experiment.label.upper()}.zip')
+
+            if os.path.exists(dst):
+                continue
+
+            message = 'downloading {PROJECT}/{LABEL} to {FOLDER}'
+            logger.debug(message.format(PROJECT=experiment.project,
+                                        LABEL=experiment.label,
+                                        FOLDER=dst))
+
+            if not dry:
+                with tf.NamedTemporaryFile(dir=tmp_dir,
+                                           prefix='tmp_xnat_',
+                                           delete=False) as tmpfilename:
+                    experiment.download(tmpfilename.name)
+                    shutil.move(tmpfilename.name, dst)
+                    os.chmod(dst, 0o0755)
+
+
 
 
 def check_consistency(d, experiment):

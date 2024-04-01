@@ -218,8 +218,17 @@ def download_xnat_session_dataorc(
     child.expect(pexpect.EOF, timeout=None)
 
 
+def get_xnat_session(Lochness, subject):
+    alias = subject.xnat.keys()[0]
+    keyring = Lochness['keyring'][alias]
+    xnat_session = xnat.connect(keyring['URL'],
+                                keyring['USERNAME'],
+                                keyring['PASSWORD'])
+    return xnat_session
+
+
 @net.retry(max_attempts=5)
-def sync_xnatpy(Lochness, subject, dry=False):
+def sync_xnatpy(Lochness, subject, dry=False, session=None):
     """A new sync function with XNATpy"""
     logger.debug('exploring {0}/{1}'.format(subject.study, subject.id))
 
@@ -236,10 +245,8 @@ def sync_xnatpy(Lochness, subject, dry=False):
             logger.warning(f'Failed to remove {tmp_file}: {e}')
 
     for alias, xnat_uids in iter(subject.xnat.items()):
-        keyring = Lochness['keyring'][alias]
-        session = xnat.connect(keyring['URL'],
-                               keyring['USERNAME'],
-                               keyring['PASSWORD'])
+        if session is None:
+            session = get_xnat_session(Lochness, subject)
         '''
         pull XNAT data agnostic to the case of subject IDs loop over lower and
         upper case IDs if the data for one ID do not exist, experiments(auth,

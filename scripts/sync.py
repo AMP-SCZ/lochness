@@ -34,6 +34,7 @@ from lochness.email import send_out_daily_updates
 from datetime import datetime, date
 from lochness.cleaner import rm_transferred_files_under_phoenix
 from lochness.utils.source_check import check_source
+from lochness.xnat import get_xnat_session
 # import dpanonymize
 
 SOURCES = {
@@ -229,6 +230,7 @@ def do(args, Lochness):
                                      multiple_site, upenn_redcap)
 
     n = 0
+    xnat_session = None
     for subject in lochness.read_phoenix_metadata(Lochness, args.studies):
         if n == 0:
             save_redcap_metadata(Lochness, subject)
@@ -249,8 +251,11 @@ def do(args, Lochness):
         else:
             for source, Module in zip(args.input_sources, args.source):
                 if source == 'xnat':
+                    if xnat_session is None:
+                        xnat_session = get_xnat_session(Lochness, subject)
                     lochness.attempt(Module.sync_xnatpy, Lochness,
-                                     subject, dry=args.dry)
+                                     subject, dry=args.dry,
+                                     session=xnat_session)
                 else:
                     lochness.attempt(Module.sync, Lochness,
                                      subject, dry=args.dry)

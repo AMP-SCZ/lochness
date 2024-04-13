@@ -394,6 +394,20 @@ def lochness_to_lochness_transfer_s3(Lochness,
             logger.debug(command_str)
             logger.debug('aws rsync completed')
 
+    # sync redcap dictionary
+    redcap_dict = Path(Lochness['phoenix_root']) / 'GENERAL/redcap_metadata.csv'
+    redcap_dict_target = re.sub(Lochness['phoenix_root'],
+                                s3_phoenix_root,
+                                str(redcap_dict))
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    command = f'aws s3 cp \
+            {redcap_dict} \
+            s3://{s3_bucket_name}/{s3_phoenix_root}/GENERAL/redcap_metadata.csv'
+    command_str = '\n'.join([f'{current_time} {x}' for x in
+                             os.popen(command).read().split('\n')
+                             if 'upload' in x]) + '\n'
+
 
 def create_s3_transfer_table(Lochness, rewrite=False) -> None:
     '''Extract s3 transfer information from the lochness log file

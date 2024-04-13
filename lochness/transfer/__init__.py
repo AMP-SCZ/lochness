@@ -571,7 +571,8 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                 if not is_phoenix_path_from_sitelist(source_directory, 
                                                      Lochness['phoenix_root'],
                                                      sites):
-                    continue
+                    pass
+                    #continue
 
                 s3_phoenix_root_dtype = re.sub(Lochness['phoenix_root'],
                                                s3_phoenix_root,

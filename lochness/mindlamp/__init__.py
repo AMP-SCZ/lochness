@@ -208,7 +208,7 @@ def sync(Lochness: 'lochness.config',
                                   indent=3, separators=(',', ': '))
             content = jsonData.encode()
             if content.strip() == b'[]':
-                logger.info(f'No mindlamp data for {subject_id} {date_str}')
+                logger.debug(f'No mindlamp data for {subject_id} {date_str}')
                 continue
 
             with tf.NamedTemporaryFile(suffix='tmp.json') as tmpfilename:
@@ -222,7 +222,7 @@ def sync(Lochness: 'lochness.config',
                         fp.write(new_file_sha256)
 
             lochness.atomic_write(dst, content)
-            logger.info(f'Mindlamp {data_name} data is saved for '
+            logger.debug(f'Mindlamp {data_name} data is saved for '
                         f'{subject_id} {date_str} (took {end-begin} s)')
 
 

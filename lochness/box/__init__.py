@@ -378,7 +378,7 @@ def _save(box_file_object, box_fullpath, local_fullfile, key, compress):
         else:
             raise e
     local_dirname = os.path.dirname(local_fullfile)
-    logger.info(f'saving {box_fullpath} to {local_fullfile} ')
+    logger.debug(f'saving {box_fullpath} to {local_fullfile} ')
 
     # write the file content to a temporary location
     if key:
@@ -450,7 +450,7 @@ def verify(f, content_hash, key=None, compress=False):
 
     if file_checksum != content_hash:
         message = f'hash mismatch detected for {f}'
-        logger.info(message)
+        logger.debug(message)
         raise BoxHashError(message, f)
     else:
         return True

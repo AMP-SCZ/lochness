@@ -486,7 +486,7 @@ def create_s3_transfer_table(Lochness, rewrite=False) -> None:
 
 
     if len(df) == 0:
-        print('No new data has been transferred to s3 bucket since last'
+        logger.debug('No new data has been transferred to s3 bucket since last'
               's3 sync according to the s3_log database')
         return
 
@@ -558,6 +558,7 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
         # if the datatype is not included in the source, don't sync
         if not is_datatype_in_sources(datatype, sources):
             continue
+        logger.debug(f'Syncing {datatype} PROTECTED')
 
         # phoenix_root / PROTECTED / site / raw / subject / datatype
         source_directories = Path(Lochness['phoenix_root']).glob(
@@ -580,7 +581,7 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                         s3://{s3_bucket_name}/{s3_phoenix_root_dtype} \
                         --exclude '*.mp3' --exclude '.check_sum*'"
 
-                # logger.debug(re.sub(r'\s+', r' ', command))
+                logger.debug(re.sub(r'\s+', r' ', command))
 
                 now = datetime.now()
                 current_time = now.strftime("%Y-%m-%d %H:%M:%S")

@@ -211,9 +211,9 @@ def download_xnat_session_dataorc(
     logger.info(f'Executing command: {command}')
 
     child = pexpect.spawn(command)
-    child.expect("Please enter your username:", timeout=5)
+    child.expect("Please enter your username:", timeout=10)
     child.sendline(xnat_username)
-    child.expect("Please enter your password:", timeout=5)
+    child.expect("Please enter your password:", timeout=10)
     child.sendline(xnat_password)
     child.expect(pexpect.EOF, timeout=None)
 
@@ -226,6 +226,7 @@ def sync_xnatpy(Lochness, subject, dry=False):
     tmp_dir = set_TMPDIR(Lochness)
 
     # remove xnatpy tmp files
+    logger.debug('Cleaning up xnatpy files')
     for tmp_file in Path(tmp_dir).glob('*generated_xnat.py'):
         os.remove(tmp_file)
 
@@ -234,12 +235,15 @@ def sync_xnatpy(Lochness, subject, dry=False):
             os.rmdir(tmp_file)
         except OSError as e:
             logger.warning(f'Failed to remove {tmp_file}: {e}')
+    logger.debug('Cleaning up xnatpy files - completed')
 
     for alias, xnat_uids in iter(subject.xnat.items()):
         keyring = Lochness['keyring'][alias]
+        logger.debug('Logging in')
         session = xnat.connect(keyring['URL'],
                                keyring['USERNAME'],
                                keyring['PASSWORD'])
+        logger.debug('Login completed')
         '''
         pull XNAT data agnostic to the case of subject IDs loop over lower and
         upper case IDs if the data for one ID do not exist, experiments(auth,
@@ -270,6 +274,7 @@ def sync_xnatpy(Lochness, subject, dry=False):
             continue
 
         for exp_id, experiment in xnat_subject.experiments.items():
+            logger.debug('Check if there is MRI data under PHOENIX')
             dirname = tree.get('mri',
                                subject.protected_folder,
                                processed=False,
@@ -277,6 +282,7 @@ def sync_xnatpy(Lochness, subject, dry=False):
             dst = os.path.join(dirname, f'{experiment.label.upper()}.zip')
 
             if os.path.exists(dst):
+                logger.debug('Already downloaded')
                 continue
 
             message = 'downloading {PROJECT}/{LABEL} to {FOLDER}'

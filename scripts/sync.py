@@ -321,6 +321,7 @@ def do(args, Lochness):
     # transfer new files after all sync attempts are done
     if args.lochness_sync_send:
         if args.s3:
+            logger.info(f'Running s3 sync')
             # for data under GENERAL
             lochness_to_lochness_transfer_s3(Lochness,
                                              args.studies,
@@ -328,6 +329,7 @@ def do(args, Lochness):
 
             # for data under PROTECTED (for selected datatypes)
             if 's3_selective_sync' in Lochness:
+                logger.info(f'Running s3 selective sync')
                 lochness_to_lochness_transfer_s3_protected(Lochness,
                                                            args.studies,
                                                            args.input_sources)
@@ -340,6 +342,7 @@ def do(args, Lochness):
         else:
             lochness_to_lochness_transfer_sftp(Lochness)
 
+    logger.info('A round of sync completed')
 
 
 if __name__ == '__main__':

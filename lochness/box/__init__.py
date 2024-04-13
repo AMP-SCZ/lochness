@@ -299,8 +299,6 @@ def save(Lochness: 'lochness',
     # local path
     local_fullfile = os.path.join(out_base, box_path_name + ext)
 
-    #if os.path.exists(local_fullfile):
-    #    return
     local_dirname = os.path.dirname(local_fullfile)
     if not os.path.exists(local_dirname):
         os.makedirs(local_dirname)
@@ -361,8 +359,8 @@ def _save(box_file_object, box_fullpath, local_fullfile, key, compress):
                       key=key, compress=compress):  # same file
                 return
         except BoxHashError:  # hash different
-            logger.info('Source file has been changed')
-            pass
+            logger.debug('Source file has been changed: '
+                         f'{local_full_file}')
 
     # request the file from box.com
     logger.debug(f'Reading content of {box_file_object}')
@@ -400,6 +398,7 @@ def _save(box_file_object, box_fullpath, local_fullfile, key, compress):
         f'.check_sum_{Path(local_fullfile).name}'
     with open(check_sum_file, 'w') as fp:
         fp.write(box_file_object.sha1)
+    logger.debug(f'check sum written: {check_sum_file}')
 
 
 class DownloadError(Exception):
@@ -575,8 +574,6 @@ def sync_module(Lochness: 'lochness.config',
                 for root, dirs, files in walk_from_folder_object(
                         bx_head, datatype_obj):
                     for box_file_object in files:
-                        logger.debug(f'Found a file matching the pattern: '
-                                     f'{box_file_object}')
                         bx_tail = join(basename(root), box_file_object.name)
                         product = _find_product(bx_tail,
                                                 product,

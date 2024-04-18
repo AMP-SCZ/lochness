@@ -124,7 +124,7 @@ def read_phoenix_metadata(Lochness, studies=None):
         metadata_loc = os.path.join(protected_folder,
                                     study_name,
                                     f'{study_name}_metadata.csv')
-        if not os.path.exists(f):
+        if not os.path.exists(metadata_loc):
             logger.error('metadata file does not exist {0}'.format
                     (metadata_loc))
             continue

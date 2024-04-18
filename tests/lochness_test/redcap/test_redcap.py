@@ -108,7 +108,8 @@ def test_initialize_metadata_function_adding_new_data_to_csv(
     for study in args.studies:
         phoenix_path = Path(Lochness['phoenix_root'])
         general_path = phoenix_path / 'GENERAL'
-        metadata = general_path / study / f"{study}_metadata.csv"
+        protected_path = phoenix_path / 'PROTECTED'
+        metadata = protected_path / study / f"{study}_metadata.csv"
         assert len(pd.read_csv(metadata)) == 1
 
         initialize_metadata(Lochness, study, 'record_id1', 'cons_date', False)
@@ -125,7 +126,8 @@ def test_initialize_metadata_then_sync(args_and_Lochness):
     for study in args.studies:
         phoenix_path = Path(Lochness['phoenix_root'])
         general_path = phoenix_path / 'GENERAL'
-        metadata = general_path / study / f"{study}_metadata.csv"
+        protected_path = phoenix_path / 'PROTECTED'
+        metadata = protected_path / study / f"{study}_metadata.csv"
         initialize_metadata(Lochness, study, 'record_id1', 'cons_date', False)
 
     for subject in lochness.read_phoenix_metadata(Lochness,
@@ -143,7 +145,8 @@ def LochnessMetadataInitialized(args_and_Lochness):
     for study in args.studies:
         phoenix_path = Path(Lochness['phoenix_root'])
         general_path = phoenix_path / 'GENERAL'
-        metadata = general_path / study / f"{study}_metadata.csv"
+        protected_path = phoenix_path / 'PROTECTED'
+        metadata = protected_path / study / f"{study}_metadata.csv"
 
         initialize_metadata(Lochness, study, 'record_id1', 'cons_date', False)
 
@@ -156,7 +159,8 @@ def test_initialize_metadata_update_when_initialized_again(
     for study in args.studies:
         phoenix_path = Path(LochnessMetadataInitialized['phoenix_root'])
         general_path = phoenix_path / 'GENERAL'
-        metadata = general_path / study / f"{study}_metadata.csv"
+        protected_path = phoenix_path / 'PROTECTED'
+        metadata = protected_path / study / f"{study}_metadata.csv"
 
         prev_st_mtime = metadata.stat().st_mtime
 

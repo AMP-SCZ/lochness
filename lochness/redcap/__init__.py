@@ -81,8 +81,8 @@ def initialize_metadata(Lochness: 'Lochness object',
     project_name = study_name.split(site_code_study)[0]  # 'Pronet'
 
     # metadata study location
-    general_path = Path(Lochness['phoenix_root']) / 'GENERAL'
-    metadata_study = general_path / study_name / f"{study_name}_metadata.csv"
+    protected_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
+    metadata_study = protected_path / study_name / f"{study_name}_metadata.csv"
 
     # use redcap_project function to load the redcap keyrings for the project
     _, api_url, api_key = next(redcap_projects(
@@ -237,8 +237,8 @@ def initialize_metadata_rm(Lochness: 'Lochness object',
     project_name = study_name.split(site_code_study)[0]  # 'Pronet'
 
     # metadata study location
-    general_path = Path(Lochness['phoenix_root']) / 'GENERAL'
-    metadata_study = general_path / study_name / f"{study_name}_metadata.csv"
+    protected_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
+    metadata_study = protected_path / study_name / f"{study_name}_metadata.csv"
 
     # use redcap_project function to load the redcap keyrings for the project
     _, api_url, api_key = next(redcap_projects(

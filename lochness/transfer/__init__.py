@@ -93,12 +93,12 @@ def compress_list_of_files(phoenix_root: str,
         out_tar_ball: tar file to save
     eg)
     ```
-    file_list = ['PHOENIX/GENERAL/StudyA/StudyA_metadata.csv',
-                 'PHOENIX/GENERAL/StudyB/StudyB_metadata.csv']
+    file_list = ['PHOENIX/PROTECTED/StudyA/StudyA_metadata.csv',
+                 'PHOENIX/PROTECTED/StudyB/StudyB_metadata.csv']
     ```
 
     PHOENIX/
-    └── GENERAL
+    └── PROTECTED
         ├── StudyA
         │   └── StudyA_metadata.csv
         └── StudyB
@@ -339,7 +339,7 @@ def lochness_to_lochness_transfer_s3(Lochness,
 
     # metadata
     metadata_files = Path(Lochness['phoenix_root']).glob(
-                    f'GENERAL/*/*_metadata.csv')
+                    f'PROTECTED/*/*_metadata.csv')
     for metadata_file in metadata_files:
         metadata_dir = metadata_file.parent
         s3_phoenix_metadata = re.sub(Lochness['phoenix_root'],

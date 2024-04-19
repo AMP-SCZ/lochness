@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timedelta
 import base64
 import re
+import tempfile as tf
 from lochness.cleaner import is_transferred_and_removed
 from lochness.utils.checksum import get_sha
 
@@ -153,27 +154,38 @@ def sync(Lochness: 'lochness.config',
                 if data_name == 'activity' else get_sensor_events_lamp
 
             # do not re-download already transferred & removed data
-            if is_transferred_and_removed(Lochness, dst):
-                continue
+            # if is_transferred_and_removed(Lochness, dst):
+            #    continue
 
-            # confirm it's a new file
-            if Path(dst).is_file():
-                checksum_file = dst.parent / f'.check_sum_{dst.name}'
+            prev_file_sha256 = ''  # set previous sha as empty
+            checksum_file = dst.parent / f'.check_sum_{dst.name}'
+            if days_from_ct >= 2 and Path(dst).is_file():
+                # if the days_from_ct is more than two days, the mindlmap data
+                # on the mindlamp server should not change, thus no need to
+                # re-download data for checking checksum.
                 if checksum_file.is_file():
-                    logger.debug(f'{data_name} data exist for {date_str} '
-                                 '- not downloading')
+                    logger.debug(f'{data_name} data has been downloaded for '
+                                 f'{date_str} - skip downloading')
                     continue
 
-                prev_file_sha256 = get_sha(dst)
-            else:
-                prev_file_sha256 = ''
+            elif days_from_ct < 2 and Path(dst).is_file():
+                # potentially within 24 hours from the data acquisition, data
+                # may change so check if there is any changes in the data on
+                # the source
+                if checksum_file.is_file():
+                    logger.debug(f'{data_name} data has been downloaded more '
+                                 'than once for checksum')
+
+                    # read checksum of the existing file
+                    with open(checksum_file, 'r') as fp:
+                        prev_file_sha256 = fp.read().strip()
 
             # pull data from mindlamp
             begin = time.time()
             try:
-                data_dict = function_to_execute(
-                        LAMP, subject_id,
-                        from_ts=time_utc_00_ts, to_ts=time_utc_24_ts)
+                data_dict = function_to_execute(LAMP, subject_id,
+                                                from_ts=time_utc_00_ts,
+                                                to_ts=time_utc_24_ts)
             except Exception as e:
                 print(e)
                 continue
@@ -189,27 +201,29 @@ def sync(Lochness: 'lochness.config',
                         dst_folder,
                         f'{subject_id}_{subject.study}_{data_name}_'
                         f'{date_str}_sound.mp3')
-                if is_transferred_and_removed(Lochness, sound_dst):
-                    continue
+                # if is_transferred_and_removed(Lochness, sound_dst):
+                    # continue
                 data_dict = get_audio_out_from_content(data_dict, sound_dst)
 
-            jsonData = json.dumps(
-                data_dict,
-                sort_keys=True, indent=3, separators=(',', ': '))
-
+            jsonData = json.dumps(data_dict, sort_keys=True,
+                                  indent=3, separators=(',', ': '))
             content = jsonData.encode()
-            
             if content.strip() == b'[]':
-                logger.info(f'No mindlamp data for {subject_id} {date_str}')
+                logger.debug(f'No mindlamp data for {subject_id} {date_str}')
                 continue
 
+            with tf.NamedTemporaryFile(suffix='tmp.json') as tmpfilename:
+                lochness.atomic_write(tmpfilename.name, content)
+                new_file_sha256 = get_sha(tmpfilename.name)
+                # if checksum is the same don't overwrite the existing data
+                if new_file_sha256 == prev_file_sha256:
+                    continue
+                else:
+                    with open(checksum_file, 'w') as fp:
+                        fp.write(new_file_sha256)
+
             lochness.atomic_write(dst, content)
-
-            new_file_sha256 = get_sha(dst)
-            if new_file_sha256 == prev_file_sha256:
-                checksum_file.touch()
-
-            logger.info(f'Mindlamp {data_name} data is saved for '
+            logger.debug(f'Mindlamp {data_name} data is saved for '
                         f'{subject_id} {date_str} (took {end-begin} s)')
 
 

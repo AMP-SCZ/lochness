@@ -28,7 +28,8 @@ from lochness.mindlamp import get_study_lamp, get_participants_lamp
 from lochness.mindlamp import get_activities_lamp, get_sensors_lamp
 from lochness.mindlamp import get_activity_events_lamp
 from lochness.mindlamp import get_sensor_events_lamp
-from lochness.mindlamp import sync, get_days_to_pull
+from lochness.mindlamp import sync, get_days_to_pull, mindlamp_projects
+import lochness.tree as tree
 import json
 import base64
 import time
@@ -528,9 +529,10 @@ def test_pronet_mindlamp_with_while(args):
     _ = KeyringAndEncryptMindlamp(args.outdir)
     # _ = KeyringAndEncryptMindlampYoon(args.outdir)
 
+        # {'subject_id': '0037', 'source_id': 'U2763080389'}
     phoenix_root = args.outdir / 'PHOENIX'
     information_to_add_to_metadata = {'mindlamp': [
-        {'subject_id': '0037', 'source_id': 'U2763080389'}
+        {'subject_id': '0037', 'source_id': 'U6435702683'}
         ]}
     
     initialize_metadata_test(phoenix_root, 'StudyA',
@@ -538,4 +540,101 @@ def test_pronet_mindlamp_with_while(args):
     Lochness = config_load_test(syncArgs.config)
     Lochness['mindlamp_days_to_pull'] = 14
     for subject in lochness.read_phoenix_metadata(Lochness, syncArgs.studies):
-        sync(Lochness, subject, False)
+        # sync(Lochness, subject, False)
+        api_url, access_key, secret_key = mindlamp_projects(Lochness,
+                                                            subject.mindlamp)
+
+        # connect to mindlamp API sdk
+        LAMP.connect(access_key, secret_key, api_url)
+
+        days_to_check = 100
+        # current time (ct) in UTC
+        ct_utc = datetime.now(pytz.timezone('UTC'))
+
+        # set the cut off point as UTC 00:00:00.00
+        ct_utc_00 = ct_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Extra information for future version
+        # study_id, study_name = get_study_lamp(LAMP)
+        # subject_ids = get_participants_lamp(LAMP, study_id)
+        subject_id = subject.mindlamp[f'mindlamp.{subject.study}'][0]
+
+        # extract consent date to only download data after consent
+        consent_date = datetime.strptime(subject.consent, '%Y-%m-%d').replace(
+                tzinfo=pytz.timezone('UTC'))
+
+        # set destination folder
+        dst_folder = tree.get('mindlamp',
+                              subject.protected_folder,
+                              processed=False,
+                              BIDS=Lochness['BIDS'])
+
+        # the loop below downloads all data from mindlamp from the current date
+        # to (current date - 100 days), overwriting pre-downloaded files.
+        for days_from_ct in reversed(range(days_to_check)):
+            # get time range: n days before current date
+            # 1000 has been multiplied to match timestamp format
+            time_utc_00 = ct_utc_00 - timedelta(days=days_from_ct)
+            if time_utc_00.month == 4:
+                if time_utc_00.day in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+                    pass
+                else:
+                    continue
+            else:
+                continue
+            print(time_utc_00)
+            # continue
+            time_utc_00_ts = time.mktime(time_utc_00.timetuple()) * 1000
+            time_utc_24 = time_utc_00 + timedelta(hours=24)
+            time_utc_24_ts = time.mktime(time_utc_24.timetuple()) * 1000
+
+            # if the before consent_date, do not download the data
+            if consent_date > time_utc_00:
+                continue
+
+            # date string to be used in the file name
+            date_str = time_utc_00.strftime("%Y_%m_%d")
+            print(date_str)
+            print(time_utc_00_ts)
+            print(time_utc_24_ts)
+
+            # store both data types
+            for data_name in ['activity', 'sensor']:
+                dst = Path(dst_folder) / \
+                    f'{subject_id}_{subject.study}_{data_name}_{date_str}.json'
+
+                function_to_execute = get_activity_events_lamp \
+                    if data_name == 'activity' else get_sensor_events_lamp
+                # function_to_execute = get_activity_events_lamp
+
+                # pull data from mindlamp
+                data_dict = function_to_execute(
+                        LAMP, subject_id,
+                        from_ts=time_utc_00_ts, to_ts=time_utc_24_ts)
+
+                # print(data_dict[0].keys())
+                # print(data_dict[-1].keys())
+                # if data_name == 'sensor':
+                    # print(data_dict[-1].keys())
+                    # print(data_dict[0]['data'])
+                    
+                # continue
+                # separate out audio data from the activity dictionary
+                # if data_name == 'activity' and data_dict:
+                sound_dst = os.path.join(
+                        dst_folder,
+                        f'{subject_id}_{subject.study}_{data_name}_'
+                        f'{date_str}_sound.mp3')
+                keys = []
+                for data_dict_single in data_dict:
+                    for key, val in data_dict_single.items():
+                        if key == 'static_data':
+                            pass
+                            # print(val)
+                        keys.append(key)
+                print(set(keys))
+
+                    # data_dict = get_audio_out_from_content(data_dict, sound_dst)
+                # continue
+                    # break
+

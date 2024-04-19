@@ -284,7 +284,7 @@ def collect_box_files_info(keyring) -> pd.DataFrame:
     def collect_out(df):
         results.append(df)
 
-    pool = Pool(10)
+    pool = Pool(2)
     for site in study_name_list:
         pool.apply_async(get_df_of_files_for_site,
                          args=(box_keyrings, site,),

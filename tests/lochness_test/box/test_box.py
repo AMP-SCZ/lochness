@@ -532,3 +532,33 @@ def test_box_sync_Phil(args_and_Lochness):
         sync(Lochness, subject, dry=False)
 
     # show_tree_then_delete('tmp_lochness')
+
+
+def test_box_sync_issue_Aug():
+    '''Test pulling data keeping the structure of the subdirectories in box'''
+    args = Args('tmp_lochness')
+    args.studies = ['PronetKC', 'PronetKC', 'PronetPA']
+    args.sources = ['box']
+    create_lochness_template(args)
+    keyring = KeyringAndEncrypt(args.outdir)
+        # {'subject_id': 'PV06517',
+        # 'source_id': 'PV06517'},
+    information_to_add_to_metadata = {'box':
+            [
+        {'subject_id': 'PA14348',
+        'source_id': 'PA14348'}
+        ]
+        }
+
+    for study in args.studies:
+        keyring.update_for_box(study)
+
+        # update box metadata
+        initialize_metadata_test('tmp_lochness/PHOENIX', study,
+                                 information_to_add_to_metadata)
+
+    Lochness = config_load_test('tmp_lochness/config.yml', '')
+
+    for subject in lochness.read_phoenix_metadata(Lochness):
+        sync(Lochness, subject, dry=False)
+

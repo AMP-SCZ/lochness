@@ -340,21 +340,24 @@ def lochness_to_lochness_transfer_s3(Lochness,
     # metadata
     metadata_files = Path(Lochness['phoenix_root']).glob(
                     f'PROTECTED/*/*_metadata.csv')
+    logger.debug('Syncing metadata files')
     for metadata_file in metadata_files:
         metadata_dir = metadata_file.parent
         s3_phoenix_metadata = re.sub(Lochness['phoenix_root'],
                                      s3_phoenix_root,
-                                     str(metadata_dir))
-        command = f"aws s3 sync \
-                {metadata_dir} \
-                s3://{s3_bucket_name}/{s3_phoenix_metadata} \
-                --exclude='*' --include='*metadata.csv'"
+                                     str(metadata_file))
+        command = f"aws s3 cp \
+                {metadata_file} \
+                s3://{s3_bucket_name}/{s3_phoenix_metadata}"
         os.popen(command).read()
+    logger.debug('Syncing metadata files completed')
 
+    logger.debug('Syncing source files')
     for datatype in ['mri', 'surveys', 'phone',
                      'actigraphy', 'eeg', 'interviews']:
         if not is_datatype_in_sources(datatype, sources):
             continue
+        logger.debug(f'Syncing {datatype} files')
 
         if general_only:
             source_directories = Path(Lochness['phoenix_root']).glob(
@@ -390,6 +393,20 @@ def lochness_to_lochness_transfer_s3(Lochness,
 
             logger.debug(command_str)
             logger.debug('aws rsync completed')
+
+    # sync redcap dictionary
+    redcap_dict = Path(Lochness['phoenix_root']) / 'GENERAL/redcap_metadata.csv'
+    redcap_dict_target = re.sub(Lochness['phoenix_root'],
+                                s3_phoenix_root,
+                                str(redcap_dict))
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    command = f'aws s3 cp \
+            {redcap_dict} \
+            s3://{s3_bucket_name}/{s3_phoenix_root}/GENERAL/redcap_metadata.csv'
+    command_str = '\n'.join([f'{current_time} {x}' for x in
+                             os.popen(command).read().split('\n')
+                             if 'upload' in x]) + '\n'
 
 
 def create_s3_transfer_table(Lochness, rewrite=False) -> None:
@@ -469,7 +486,7 @@ def create_s3_transfer_table(Lochness, rewrite=False) -> None:
 
 
     if len(df) == 0:
-        print('No new data has been transferred to s3 bucket since last'
+        logger.debug('No new data has been transferred to s3 bucket since last'
               's3 sync according to the s3_log database')
         return
 
@@ -541,6 +558,7 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
         # if the datatype is not included in the source, don't sync
         if not is_datatype_in_sources(datatype, sources):
             continue
+        logger.debug(f'Syncing {datatype} PROTECTED')
 
         # phoenix_root / PROTECTED / site / raw / subject / datatype
         source_directories = Path(Lochness['phoenix_root']).glob(
@@ -553,7 +571,8 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                 if not is_phoenix_path_from_sitelist(source_directory, 
                                                      Lochness['phoenix_root'],
                                                      sites):
-                    continue
+                    pass
+                    #continue
 
                 s3_phoenix_root_dtype = re.sub(Lochness['phoenix_root'],
                                                s3_phoenix_root,
@@ -564,7 +583,7 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                         --exclude '*.mp3' --exclude '.check_sum*' \
                         --exclude '.checksum*' "
 
-                # logger.debug(re.sub(r'\s+', r' ', command))
+                logger.debug(re.sub(r'\s+', r' ', command))
 
                 now = datetime.now()
                 current_time = now.strftime("%Y-%m-%d %H:%M:%S")

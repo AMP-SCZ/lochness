@@ -1,9 +1,13 @@
 import os
+import subprocess
+import pexpect
 import yaml
 import uuid
-import yaxil
-import lochness
+import xnat
+# import yaxil
+import shutil
 import logging
+import lochness
 import tempfile as tf
 import collections as col
 from pathlib import Path
@@ -16,6 +20,7 @@ yaml.SafeDumper.add_representer(
         col.OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
 logger = logging.getLogger(__name__)
+
 
 @net.retry(max_attempts=5)
 def sync_old(Lochness, subject, dry=False):
@@ -30,7 +35,7 @@ def sync_old(Lochness, subject, dry=False):
         upper case IDs if the data for one ID do not exist, experiments(auth,
         xnat_uid) returns nothing preventing the execution of inner loop
         '''
-        _xnat_uids= xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
+        _xnat_uids = xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
         for xnat_uid in _xnat_uids:
             for experiment in experiments(auth, xnat_uid):
                 logger.info(experiment)
@@ -57,9 +62,9 @@ def sync_old(Lochness, subject, dry=False):
                                   'it does not match the data on XNAT.' \
                                   'Please check MRI data saved in {dst} and ' \
                                   'compared to the XNAT data.'
-                            
+
                         lochness.notify(Lochness, message, study=subject.study)
-                        #lochness.backup(dst)
+                        # lochness.backup(dst)
                         continue
 
                 message = 'downloading {PROJECT}/{LABEL} to {FOLDER}'
@@ -80,7 +85,6 @@ def sync_old(Lochness, subject, dry=False):
                     os.rename(tmpdir, dst)
 
 
-
 @net.retry(max_attempts=5)
 def sync(Lochness, subject, dry=False):
     logger.debug('exploring {0}/{1}'.format(subject.study, subject.id))
@@ -94,7 +98,7 @@ def sync(Lochness, subject, dry=False):
         upper case IDs if the data for one ID do not exist, experiments(auth,
         xnat_uid) returns nothing preventing the execution of inner loop
         '''
-        _xnat_uids= xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
+        _xnat_uids = xnat_uids + [(x[0], x[1].lower()) for x in xnat_uids]
         for xnat_uid in _xnat_uids:
             for experiment in experiments(auth, xnat_uid):
                 logger.info(experiment)
@@ -134,6 +138,185 @@ def sync(Lochness, subject, dry=False):
                     save_experiment_file(dirname, auth.url, experiment)
                     with open(archieved_date_log, 'w') as fp:
                         fp.write(archieved_date)
+
+
+class NoMatchingSubjectXNAT(Exception):
+    pass
+
+
+def set_TMPDIR(Lochness):
+    try:
+        tmp_dir = Lochness['tmp_dir']
+    except KeyError:
+        tmp_dir = os.environ.get('TMPDIR')
+        if tmp_dir is None:
+            tmp_dir = tf.gettempdir()
+
+    # Set the TMPDIR environment variable to a default value
+    os.environ['TMPDIR'] = tmp_dir
+
+    return tmp_dir
+
+
+def download_xnat_session_dataorc(
+    host: str,
+    project: str,
+    subject: str,
+    session: str,
+    out_dir: str,
+    xnat_username: str,
+    xnat_password: str
+) -> None:
+    """
+    Downloads session data from an XNAT server using the dataorc command-line tool.
+
+    Args:
+        host (str): The hostname of the XNAT server.
+        project (str): The name of the project containing the session data.
+        subject (str): The ID of the subject.
+        session (str): The ID of the session to download.
+        out_dir (str): The directory to which the session data should be downloaded.
+        xnat_username (str): The username to use when authenticating with the XNAT server.
+        xnat_password (str): The password to use when authenticating with the XNAT server.
+
+    Returns:
+        None
+    """
+
+    dataorc_binary_path = shutil.which('dataorc')
+    if dataorc_binary_path is None:
+        logger.error('dataorc binary not in PATH')
+        raise Exception('dataorc binary not in PATH')
+    else:
+        dataorc_binary_path = Path(dataorc_binary_path)
+
+    def clear_stored_credentials(dataorc_bindary_path: Path):
+        cli = f"{dataorc_bindary_path} reset-credentials"
+        subprocess.run(cli, shell=True, timeout=10, stdout=subprocess.DEVNULL)
+
+    logger.info('Clearing stored credentials for dataorc')
+    clear_stored_credentials(dataorc_binary_path)
+
+    command_array = [
+        str(dataorc_binary_path),
+        'xnat-download-session',
+        '--host', host,
+        '--project', project,
+        '--subject', subject,
+        '--session', session,
+        '--output-dir', out_dir
+    ]
+
+    command = ' '.join(command_array)
+    logger.info(f'Executing command: {command}')
+
+    child = pexpect.spawn(command)
+    child.expect("Please enter your username:", timeout=10)
+    child.sendline(xnat_username)
+    child.expect("Please enter your password:", timeout=10)
+    child.sendline(xnat_password)
+    child.expect(pexpect.EOF, timeout=None)
+
+
+@net.retry(max_attempts=5)
+def sync_xnatpy(Lochness, subject, dry=False):
+    """A new sync function with XNATpy"""
+    logger.debug('exploring {0}/{1}'.format(subject.study, subject.id))
+
+    tmp_dir = set_TMPDIR(Lochness)
+
+    # remove xnatpy tmp files
+    logger.debug('Cleaning up xnatpy files')
+    for tmp_file in Path(tmp_dir).glob('*generated_xnat.py'):
+        os.remove(tmp_file)
+
+    for tmp_file in Path(tmp_dir).glob('tmp_xnat*'):
+        try:
+            os.rmdir(tmp_file)
+        except OSError as e:
+            logger.warning(f'Failed to remove {tmp_file}: {e}')
+    logger.debug('Cleaning up xnatpy files - completed')
+
+    for alias, xnat_uids in iter(subject.xnat.items()):
+        keyring = Lochness['keyring'][alias]
+        logger.debug('Logging in')
+        session = xnat.connect(keyring['URL'],
+                               keyring['USERNAME'],
+                               keyring['PASSWORD'])
+        logger.debug('Login completed')
+        '''
+        pull XNAT data agnostic to the case of subject IDs loop over lower and
+        upper case IDs if the data for one ID do not exist, experiments(auth,
+        xnat_uid) returns nothing preventing the execution of inner loop
+        '''
+        site = xnat_uids[0][1][:2]
+        _xnat_uids = [(x[0], x[1].upper()) for x in xnat_uids] + \
+                     [(x[0], x[1].lower()) for x in xnat_uids]
+
+        for ses in session.projects:
+            if 'pronet' in ses.lower():
+                if site in ses:
+                    break
+
+        project = session.projects[ses]
+        xnat_subject = ''
+        for xnat_uid in _xnat_uids:
+            try:
+                xnat_subject = project.subjects[xnat_uid[1]]
+                break
+            except KeyError as e:
+                continue
+
+        if xnat_subject == '':
+            msg = 'There is no matching subject in XNAT database: '
+            msg += f"{' / '.join([x[1] for x in _xnat_uids])}"
+            logger.debug(msg)
+            continue
+
+        for exp_id, experiment in xnat_subject.experiments.items():
+            logger.debug('Check if there is MRI data under PHOENIX')
+            dirname = tree.get('mri',
+                               subject.protected_folder,
+                               processed=False,
+                               BIDS=Lochness['BIDS'])
+            dst = os.path.join(dirname, f'{experiment.label.upper()}.zip')
+
+            if os.path.exists(dst):
+                logger.debug('Already downloaded')
+                continue
+
+            message = 'downloading {PROJECT}/{LABEL} to {FOLDER}'
+            logger.debug(message.format(PROJECT=experiment.project,
+                                        LABEL=experiment.label,
+                                        FOLDER=dst))
+
+            if not dry:
+                #with tf.NamedTemporaryFile(dir=tmp_dir,
+                #                           prefix='tmp_xnat_',
+                #                           delete=False) as tmpfilename:
+                #    experiment.download(tmpfilename.name)
+                #    shutil.move(tmpfilename.name, dst)
+                #    os.chmod(dst, 0o0755)
+
+                with tf.TemporaryDirectory(dir=tmp_dir,
+                                           prefix='tmp_xnat_') as tmpdirname:
+                    download_xnat_session_dataorc(
+                        host=keyring['URL'],
+                        project=experiment.project,
+                        subject=xnat_subject.label,
+                        session=experiment.label,
+                        out_dir=tmpdirname,
+                        xnat_username=keyring['USERNAME'],
+                        xnat_password=keyring['PASSWORD']
+                    )
+
+                    downloaded_files = os.listdir(tmpdirname)
+
+                    downloaded_file = downloaded_files[0]
+                    downloaded_file_path = os.path.join(tmpdirname, downloaded_file)
+
+                    shutil.move(downloaded_file_path, dst)
+                    os.chmod(dst, 0o0755)
 
 
 def check_consistency(d, experiment):

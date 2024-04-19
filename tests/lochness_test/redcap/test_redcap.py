@@ -435,6 +435,14 @@ def test_upenn_inclusive_id():
                        f"[session_subid] = '{redcap_subject_sl}' or "
                        f"{' or '.join(contains_logic)}"
     }
+
+    record_query = {
+        'token': api_key,
+        'content': 'record',
+        'format': 'json',
+        'filterLogic': f"[session_subid] = '{redcap_subject}' or "
+                       f"[session_subid] = '{redcap_subject_sl}'"
+    }
     print()
     # print(record_query)
     print()

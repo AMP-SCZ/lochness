@@ -100,10 +100,15 @@ def initialize_metadata(Lochness, args,
         elif 'redcap' in args.input_sources:
             id_fieldname = Lochness['redcap_id_colname']
             consent_fieldname = Lochness['redcap_consent_colname']
-            REDCap.initialize_metadata(
-                    Lochness, study_name, id_fieldname, consent_fieldname,
-                    multiple_site_in_a_repo, upenn_redcap)
-
+            try:
+                REDCap.initialize_metadata(
+                        Lochness, study_name, id_fieldname, consent_fieldname,
+                        multiple_site_in_a_repo, upenn_redcap)
+            except lochness.redcap.REDCapError as e:
+                logger.debug('REDCap not accessible')
+                logger.debug(e)
+                print('REDCap not accessible')
+                continue
         else:
             pass
 
@@ -576,23 +581,10 @@ def atomic_write(filename, content, overwrite=True,
     :type permissions: octal
     '''
     filename = os.path.expanduser(filename)
-    if not overwrite and os.path.exists(filename):
-        raise WriteError("file already exists: %s" % filename)
-    dirname = os.path.dirname(filename)
-    with tf.NamedTemporaryFile(dir=dirname, prefix='.', delete=False) as tmp:
-        if isinstance(content, six.string_types):
-            tmp.write(content.decode(encoding))
-        else:
-            tmp.write(content)
-        tmp.flush()
-        os.fsync(tmp.fileno())
-
-    try:  #
-        os.chmod(tmp.name, permissions)
-    except PermissionError:  # when admin forces output file permissions
-        pass
-
-    os.rename(tmp.name, filename)
+    
+    with open(filename,'w') as f:
+        f.write(content.decode(encoding))
+        f.flush()
 
 
 def WriteError(Exception):

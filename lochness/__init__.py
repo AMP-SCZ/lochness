@@ -126,7 +126,7 @@ def read_phoenix_metadata(Lochness, studies=None):
         studies = lochness.listdir(Lochness, general_folder)
     # iterate over studies
     for study_name in studies:
-        f = os.path.join(general_folder,
+        f = os.path.join(protected_folder,
                          study_name,
                          f'{study_name}_metadata.csv')
         if not os.path.exists(f):

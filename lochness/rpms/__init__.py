@@ -322,6 +322,8 @@ def initialize_metadata(Lochness: 'Lochness object',
                 if upenn:
                     subject_dict['REDCap'] = \
                         'redcap.UPENN:' + df_measure[rpms_id_colname]
+                    subject_dict['REDCap'] += \
+                        ';redcap.UPENN_new:' + df_measure[rpms_id_colname]
 
                 df_tmp = pd.DataFrame.from_dict(subject_dict, orient='index')
                 df = pd.concat([df, df_tmp.T])

@@ -178,6 +178,8 @@ def initialize_metadata(Lochness: 'Lochness object',
                 f'redcap.{project_name}:{subject_id}'
         subject_dict['REDCap'] += \
                 f';redcap.UPENN:{row[redcap_id_colname]}'  # UPENN REDCAP
+        subject_dict['REDCap'] += \
+                f';redcap.UPENN_new:{row[redcap_id_colname]}'  # UPENN REDCAP
         subject_dict['Box'] = f'box.{study_name}:{subject_id}'
         subject_dict['XNAT'] = f'xnat.{study_name}:*:{subject_id}'
 
@@ -679,6 +681,13 @@ def sync(Lochness, subject, dry=False):
             _debug_tup = (redcap_instance, redcap_project, redcap_subject)
 
             if 'UPENN' in redcap_instance:
+                print(redcap_instance)
+                if redcap_instance == 'redcap.UPENN':
+                    upenn_id_colname = 'session_subid'
+                elif redcap_instance == 'redcap.UPENN_new':
+                    upenn_id_colname = 'src_subject_id'
+                else:
+                    logger.warning('Wrong upenn_id_colname. Check REDCap code')
                 # UPENN REDCap is set up with its own record_id, but have added
                 # "session_subid" field to note AMP-SCZ ID
                 redcap_subject_sl = redcap_subject.lower()
@@ -687,20 +696,21 @@ def sync(Lochness, subject, dry=False):
                 contains_logic = []
                 for subject_id in [redcap_subject, redcap_subject_sl]:
                     contains_logic += [
-                            f"contains([session_subid], '{subject_id}_{x}')"
-                            for x in digits_str]
+                        f"contains([{upenn_id_colname}], '{subject_id}_{x}')"
+                        for x in digits_str]
                     contains_logic += [
-                            f"contains([session_subid], '{subject_id}={x}')"
-                            for x in digits_str]
+                        f"contains([{upenn_id_colname}], '{subject_id}={x}')"
+                        for x in digits_str]
 
 
                 record_query = {
                     'token': api_key,
                     'content': 'record',
                     'format': 'json',
-                    'filterLogic': f"[session_subid] = '{redcap_subject}' or "
-                                   f"[session_subid] = '{redcap_subject_sl}' or "
-                                   f"{' or '.join(contains_logic)}"
+                    'filterLogic':
+                        f"[{upenn_id_colname}] = '{redcap_subject}' or "
+                        f"[{upenn_id_colname}] = '{redcap_subject_sl}' or "
+                        f"{' or '.join(contains_logic)}"
                 }
                                    # f"[session_subid] = '{redcap_subject_sl}' or "
                                    # f"{' or '.join(contains_logic)}"

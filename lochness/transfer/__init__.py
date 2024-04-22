@@ -339,7 +339,7 @@ def lochness_to_lochness_transfer_s3(Lochness,
 
     # metadata
     metadata_files = Path(Lochness['phoenix_root']).glob(
-                    f'GENERAL/*/*_metadata.csv')
+                    f'PROTECTED/*/*_metadata.csv')
     logger.debug('Syncing metadata files')
     for metadata_file in metadata_files:
         metadata_dir = metadata_file.parent

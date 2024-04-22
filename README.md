@@ -103,14 +103,14 @@ Running one of the commands above will create the structure below
 ├── 1_encrypt_command.sh
 ├── 2_sync_command.sh
 ├── PHOENIX
-│   ├── GENERAL
+│   ├── PROTECTED
 │   │   ├── PronetLA
 │   │   │   └── PronetLA_metadata.csv
 │   │   ├── PronetSL
 │   │   │   └── PronetSL_metadata.csv
 │   │   └── PronetWU
 │   │       └── PronetWU_metadata.csv
-│   └── PROTECTED
+│   └── GENERAL
 │       ├── PronetLA
 │       ├── PronetSL
 │       └── PronetWU
@@ -131,7 +131,7 @@ has all information, it should be encrypted. (See step 3 below)
 non-sensitive information about the server, lochness instance and different
 data sources.
 
-2. Either manually update the `PHOENIX/GENERAL/*/*_metadata.csv` or
+2. Either manually update the `PHOENIX/PROTECTED/*/*_metadata.csv` or
    amend the field names in REDCap / RPMS sources correctly for lochness to
    automatically update the metadata files.
 

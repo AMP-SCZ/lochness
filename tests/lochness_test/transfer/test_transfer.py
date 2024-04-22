@@ -67,8 +67,8 @@ def test_get_updated_files(Lochness):
                                    timestamp_a_day_ago,
                                    posttime)
 
-    assert Path('PHOENIX/GENERAL/StudyA/StudyA_metadata.csv') in file_lists
-    assert Path('PHOENIX/GENERAL/StudyB/StudyB_metadata.csv') in file_lists
+    assert Path('PHOENIX/PROTECTED/StudyA/StudyA_metadata.csv') in file_lists
+    assert Path('PHOENIX/PROTECTED/StudyB/StudyB_metadata.csv') in file_lists
 
     show_tree_then_delete('tmp_lochness')
 

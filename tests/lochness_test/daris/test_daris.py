@@ -99,7 +99,7 @@ def initialize_metadata(Lochness, study_name):
         'Consent': '1988-09-16',
         'Subject ID': 'subject01',
         'Daris': 'daris.StudyA:5Yp0E'})
-    df_loc = Path(Lochness['phoenix_root']) / 'GENERAL' / \
+    df_loc = Path(Lochness['phoenix_root']) / 'PROTECTED' / \
             study_name / f"{study_name}_metadata.csv"
 
     df.to_csv(df_loc, index=False)

@@ -46,7 +46,7 @@ def create_lochness_template(args):
             pg(argsForPheonix)
         except SystemExit:
             pass
-        metadata = phoenix_root / 'GENERAL' / study / f'{study}_metadata.csv'
+        metadata = phoenix_root / 'PROTECTED' / study / f'{study}_metadata.csv'
 
         # create example metadata
         create_example_meta_file_advanced(metadata, study, args.sources)

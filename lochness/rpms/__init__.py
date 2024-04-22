@@ -348,7 +348,7 @@ def initialize_metadata(Lochness: 'Lochness object',
     df_final = df_final[main_cols + \
             [x for x in df_final.columns if x not in main_cols]]
 
-    general_path = Path(Lochness['phoenix_root']) / 'GENERAL'
+    general_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
     metadata_study = general_path / study_name / f"{study_name}_metadata.csv"
 
     df_final.to_csv(metadata_study, index=False)

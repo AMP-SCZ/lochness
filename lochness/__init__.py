@@ -121,17 +121,18 @@ def read_phoenix_metadata(Lochness, studies=None):
         studies = lochness.listdir(Lochness, general_folder)
     # iterate over studies
     for study_name in studies:
-        f = os.path.join(general_folder,
-                         study_name,
-                         f'{study_name}_metadata.csv')
-        if not os.path.exists(f):
-            logger.error('metadata file does not exist {0}'.format(f))
+        metadata_loc = os.path.join(protected_folder,
+                                    study_name,
+                                    f'{study_name}_metadata.csv')
+        if not os.path.exists(metadata_loc):
+            logger.error('metadata file does not exist {0}'.format
+                    (metadata_loc))
             continue
-        logger.debug('reading metadata file {0}'.format(f))
+        logger.debug('reading metadata file {0}'.format(metadata_loc))
         try:
             # iterate over rows in metadata file
             for subject in _subjects(Lochness, study_name, general_folder,
-                                     protected_folder, f):
+                                     protected_folder, metadata_loc):
                 yield subject
         except StudyMetadataError as e:
             logger.error(e)

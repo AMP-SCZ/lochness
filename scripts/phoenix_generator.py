@@ -22,7 +22,7 @@ def main(args):
 
     general = os.path.join(args.dir, 'GENERAL', args.study)
     protected = os.path.join(args.dir, 'PROTECTED', args.study)
-    metadata = os.path.join(general, '{0}_metadata.csv'.format(args.study))
+    metadata = os.path.join(protected, '{0}_metadata.csv'.format(args.study))
 
     # check if folder or metadata file already exists
     for f in [general, protected, metadata]:

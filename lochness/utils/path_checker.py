@@ -175,7 +175,7 @@ def update_interviews_video_check(df: pd.DataFrame) -> pd.DataFrame:
         (df.modality == "Interviews")
         & (
             (df.file_name.str.endswith(".mp4"))
-            | (df.file_name.str.endswith("recording.conf"))
+            | (df.file_name.str.endswith(".conf"))
         )
     ].index
 
@@ -309,7 +309,7 @@ def update_by_removing_unused_files(df: pd.DataFrame) -> None:
 
     The following files will be removed:
         - .DS_Store
-        - recording.conf
+        - *.conf
         - chat.txt
         - Files under TRANSCRIPTS/For review
 
@@ -323,8 +323,8 @@ def update_by_removing_unused_files(df: pd.DataFrame) -> None:
     ds_store_index = df[df.file_name == '.DS_Store'].index
     df.drop(ds_store_index, inplace=True)
 
-    # recording.conf files
-    recording_conf_index = df[df.file_name.str.endswith('recording.conf')].index
+    # *.conf files
+    recording_conf_index = df[df.file_name.str.endswith('.conf')].index
     df.drop(recording_conf_index, inplace=True)
 
     # chat.txt files
@@ -413,7 +413,7 @@ def check_file_path_df(df: pd.DataFrame,
     # ignore genetics and fluids
     update_by_removing_genetics_and_fluids(df)
 
-    # ignore .DS_Store, recording.conf, chat.txt
+    # ignore .DS_Store, *.conf, chat.txt
     update_by_removing_unused_files(df)
 
     # check if the subject exist in metadata

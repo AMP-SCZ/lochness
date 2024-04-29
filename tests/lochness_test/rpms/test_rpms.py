@@ -75,7 +75,7 @@ def test_initializing_based_on_rpms(Lochness):
     create_fake_rpms_repo()
     Lochness['RPMS_PATH'] = Path('RPMS_repo').absolute()
     initialize_metadata(Lochness, 'StudyA', 'subjectkey', 'Consent', False)
-    df = pd.read_csv('tmp_lochness/PHOENIX/GENERAL/StudyA/StudyA_metadata.csv')
+    df = pd.read_csv('tmp_lochness/PHOENIX/PROTECTED/StudyA/StudyA_metadata.csv')
     print(df)
     show_tree_then_delete('tmp_lochness')
     assert len(df) == 10
@@ -319,7 +319,7 @@ def test_subjects_with_multiple_consent_dates():
     rpms_consent_colname = 'chric_consent_date'
     rpms_id_colname = 'subjectkey'
     Lochness['RPMS_id_colname'] = rpms_id_colname
-    out_metadata = Path(f'test/GENERAL/{study_name}/{study_name}_metadata.csv')
+    out_metadata = Path(f'test/PROTECTED/{study_name}/{study_name}_metadata.csv')
     out_metadata.parent.mkdir(exist_ok=True)
 
     initialize_metadata(Lochness,

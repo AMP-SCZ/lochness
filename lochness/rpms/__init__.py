@@ -325,6 +325,8 @@ def initialize_metadata(Lochness: 'Lochness object',
                 if upenn:
                     subject_dict['REDCap'] = \
                         'redcap.UPENN:' + df_measure[rpms_id_colname]
+                    subject_dict['REDCap'] += \
+                        ';redcap.UPENN_new:' + df_measure[rpms_id_colname]
 
                 df_tmp = pd.DataFrame.from_dict(subject_dict, orient='index')
                 df = pd.concat([df, df_tmp.T])
@@ -351,7 +353,7 @@ def initialize_metadata(Lochness: 'Lochness object',
     df_final = df_final[main_cols + \
             [x for x in df_final.columns if x not in main_cols]]
 
-    general_path = Path(Lochness['phoenix_root']) / 'GENERAL'
+    general_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
     metadata_study = general_path / study_name / f"{study_name}_metadata.csv"
 
     df_final.to_csv(metadata_study, index=False)

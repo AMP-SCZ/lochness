@@ -396,8 +396,8 @@ def initialize_metadata_test(phoenix_root: 'phoenix root',
     df_final = df_final[main_cols + \
             [x for x in df_final.columns if x not in main_cols]]
 
-    general_path = Path(phoenix_root) / 'GENERAL'
-    metadata_study = general_path / study_name / f"{study_name}_metadata.csv"
+    protected_path = Path(phoenix_root) / 'PROTECTED'
+    metadata_study = protected_path / study_name / f"{study_name}_metadata.csv"
 
     df_final.to_csv(metadata_study, index=False)
 

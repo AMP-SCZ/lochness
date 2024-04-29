@@ -72,7 +72,10 @@ def get_rpms_database(rpms_root_path: str) -> Dict[str, pd.DataFrame]:
         rpms_pattern = re.compile(
                 r'PrescientStudy_Prescient_(\w+)_(\d{2}.\d{2}.\d{4}).csv',
                 re.IGNORECASE)
+
         pattern_search = re.search(rpms_pattern, Path(measure_file).name)
+        if not pattern_search:
+            continue
         measure_name = pattern_search.group(1)
         measure_file_date = pd.to_datetime(pattern_search.group(2),
                                            dayfirst=True)
@@ -172,7 +175,7 @@ def get_run_sheets_for_datatypes(target_df_loc: Union[Path, str]) -> None:
                         continue
 
                 table.to_csv(run_sheet_output, index=False)
-                os.chmod(run_sheet_output, 0o0755)
+                #os.chmod(run_sheet_output, 0o0755)
 
 
 def initialize_metadata(Lochness: 'Lochness object',
@@ -440,9 +443,9 @@ def sync(Lochness, subject, dry=False):
 
         if not dry:
             Path(dirname).mkdir(exist_ok=True)
-            os.chmod(dirname, 0o0755)
+            #os.chmod(dirname, 0o0755)
             source_df.to_csv(target_df_loc, index=False)
-            os.chmod(target_df_loc, 0o0755)
+            #os.chmod(target_df_loc, 0o0755)
             get_run_sheets_for_datatypes(target_df_loc)
             # process_and_copy_db(Lochness, subject, target_df_loc, proc_dst)
 

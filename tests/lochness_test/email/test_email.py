@@ -16,7 +16,7 @@ from test_lochness import show_tree_then_delete, rmtree, config_load_test
 from test_lochness import initialize_metadata_test
 from lochness_create_template import create_lochness_template
 
-from lochness.email import send_out_daily_updates
+from lochness.email import send_out_daily_updates, send
 import pytest
 
 @pytest.fixture
@@ -56,9 +56,18 @@ def test_box_sync_module_mailx(args_and_Lochness_BIDS):
 
 
 def test_email_size():
-    config_loc = '/mnt/prescient/Prescient_production/config.yml'
+    config_loc = '/var/lib/prescient/lochness_configs/config.yml'
     Lochness = load(config_loc)
     Lochness['sender'] = 'kevincho@bwh.harvard.edu'
 
     Lochness['notify']['test'] = ['kevincho@bwh.harvard.edu']
     send_out_daily_updates(Lochness)
+
+
+def test_send_new_server():
+    recipients = ['kevincho@bwh.harvard.edu', 'dmohandass@mgh.harvard.edu',
+                  'sylvain.bouix@etsmtl.ca']
+    sender = 'kevincho@bwh.harvard.edu'
+    subject = 'email test'
+    message = 'let me know if you receive this'
+    send(recipients, sender, subject, message)

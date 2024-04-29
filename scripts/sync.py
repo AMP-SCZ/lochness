@@ -12,7 +12,6 @@ import lochness.config as config
 import lochness.daemon as daemon
 import lochness.hdd as HDD
 import lochness.xnat as XNAT
-import lochness.beiwe as Beiwe
 import lochness.redcap as REDCap
 from lochness.redcap import save_redcap_metadata
 import lochness.mindlamp as Mindlamp
@@ -38,7 +37,6 @@ from lochness.utils.source_check import check_source
 
 SOURCES = {
     'xnat': XNAT,
-    'beiwe': Beiwe,
     'redcap': REDCap,
     'mindlamp': Mindlamp,
     'dropbox': Dropbox,

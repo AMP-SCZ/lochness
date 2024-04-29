@@ -189,7 +189,7 @@ def sync_module(Lochness: 'lochness.config',
 
                             # ENH set different permissions
                             os.makedirs(mf_local, exist_ok=True)
-                            os.chmod(mf_local, 0o0770)
+                            # os.chmod(mf_local, 0o0770)
 
                             # subprocess call unimelb-mf-download
                             cmd = (' ').join(['unimelb-mf-download',
@@ -220,13 +220,13 @@ def sync_module(Lochness: 'lochness.config',
                                         interviews_root):
                                     dir_path = Path(root)
                                     perm = oct(dir_path.stat().st_mode)[-3:]
-                                    if perm != '770':
-                                        os.chmod(dir_path, 0o0770)
-                                    for file in files:
-                                        file_p = Path(root) / file
-                                        perm = oct(file_p.stat().st_mode)[-3:]
-                                        if perm != '770':
-                                            os.chmod(file_p, 0o0770)
+                                    # if perm != '770':
+                                        # os.chmod(dir_path, 0o0770)
+                                    # for file in files:
+                                        # file_p = Path(root) / file
+                                        # perm = oct(file_p.stat().st_mode)[-3:]
+                                        # if perm != '770':
+                                            # os.chmod(file_p, 0o0770)
 
 
 def sync(Lochness, subject, dry):

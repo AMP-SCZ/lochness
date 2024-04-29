@@ -126,8 +126,8 @@ def get(data_type, base, **kwargs):
                            str(processed_folder)))
         Path(protected_str).mkdir(exist_ok=True, parents=True)
         Path(general_str).mkdir(exist_ok=True, parents=True)
-        os.chmod(protected_str, 0o01770)
-        os.chmod(general_str, 0o01770)
+        os.chmod(protected_str, 0o00770)
+        os.chmod(general_str, 0o00770)
 
         for path in protected_str, general_str:
             if not (path / '.log').is_file():
@@ -140,8 +140,8 @@ def get(data_type, base, **kwargs):
         general_str = Path(re.sub('GENERAL', 'PROTECTED', str(raw_folder)))
         protected_str.mkdir(exist_ok=True, parents=True)
         general_str.mkdir(exist_ok=True, parents=True)
-        os.chmod(protected_str, 0o01770)
-        os.chmod(general_str, 0o01770)
+        os.chmod(protected_str, 0o00770)
+        os.chmod(general_str, 0o00770)
 
         for path in protected_str, general_str:
             if not (path / '.log').is_file():

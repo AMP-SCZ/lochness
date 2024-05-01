@@ -128,7 +128,7 @@ def send_out_daily_updates(Lochness, days: int = 1,
     if s3_log.is_file():
         s3_df = pd.read_csv(s3_log)
         s3_df['timestamp'] = pd.to_datetime(s3_df['timestamp'])
-        s3_df['ctime'] = pd.to_datetime(s3_df['ctime']).apply(
+        s3_df['ctime'] = pd.to_datetime(s3_df['ctime'], format='mixed').apply(
                 lambda x: x.replace(microsecond=0))
 
         # get the timestamp to check the dataflow from
@@ -209,7 +209,7 @@ def send_out_daily_updates(Lochness, days: int = 1,
             s3_df_tmp = s3_df_selected.copy()
             for index, row in s3_df_tmp.iterrows():
                 s3_df_tmp.loc[index, 'File name'] = re.sub(
-                        row['Subject'], 'SUBJECT', row['File name'])
+                        row['Subject'], '{SUBJECT_ID}', row['File name'])
 
                 mindlamp_act_patt = r'_activity_(\d{4}_\d{2}_\d{2}.+)$'
                 if re.search(mindlamp_act_patt, row['File name']):

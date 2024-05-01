@@ -176,6 +176,8 @@ def sync_module(Lochness: 'lochness.config',
                                     prev_checksum = fp.read().strip()
 
                                 if prev_checksum == checksum:
+                                    logger.debug('Same file according to the '
+                                                 'checksum file')
                                     continue
                                 # else:
                                     # pass
@@ -199,6 +201,7 @@ def sync_module(Lochness: 'lochness.config',
                                               '--overwrite',
                                               f'\"{remote}\"'])
 
+                            logger.debug(f'Downloading {remote}')
                             p = Popen(cmd, shell=True,
                                       stdout=DEVNULL, stderr=STDOUT)
                             p.wait()

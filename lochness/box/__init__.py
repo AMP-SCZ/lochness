@@ -360,7 +360,7 @@ def _save(box_file_object, box_fullpath, local_fullfile, key, compress):
                 return
         except BoxHashError:  # hash different
             logger.debug('Source file has been changed: '
-                         f'{local_full_file}')
+                         f'{local_fullfile}')
 
     # request the file from box.com
     logger.debug(f'Reading content of {box_file_object}')

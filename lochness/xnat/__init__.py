@@ -317,6 +317,7 @@ def sync_xnatpy(Lochness, subject, dry=False):
 
                     shutil.move(downloaded_file_path, dst)
                     os.chmod(dst, 0o0755)
+                    kill_process_by_name('dataorc')
 
 
 def check_consistency(d, experiment):
@@ -374,3 +375,17 @@ def experiments(auth, uid):
     for experiment in yaxil.experiments(auth, subject=xnat_subject):
         yield experiment
 
+
+def kill_process_by_name(process_name: str) -> None:
+    """
+    Kill a process by its name.
+
+    Args:
+        process_name (str): The name of the process to kill.
+    """
+    command = f"ps -ef | grep {process_name} | grep -v grep | awk '{{print $2}}'"
+    result = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    pids, _ = result.communicate()
+    pids = [int(pid) for pid in pids.decode().split('\n') if pid.strip()]
+    for pid in pids:
+        os.kill(pid, 9)

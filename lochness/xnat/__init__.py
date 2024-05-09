@@ -321,7 +321,6 @@ def sync_xnatpy(Lochness, subject, dry=False):
                     return 'completed'
 
 
-
 def save_last_downloaded_subject(Lochness, subject_label:str):
     log_file = Path(Lochness['phoenix_root']).parent / '.last_xnat_sync_id'
     with open(log_file, 'w') as fp:

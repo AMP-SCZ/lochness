@@ -313,8 +313,9 @@ def do(args, Lochness):
                     elif not keep_loop:
                         continue  # skip subjects before last synced
 
-                    if lochness.attempt(Module.sync_xnatpy, Lochness,
-                            subject, dry=args.dry) is not None:
+                    output = lochness.attempt(Module.sync_xnatpy, Lochness,
+                            subject, dry=args.dry)
+                    if output is not None:
                         keep_loop = False
 
                 else:
@@ -332,7 +333,6 @@ def do(args, Lochness):
     #else:
     #    dpanonymize.lock_lochness(
     #            Lochnesss, pii_table_loc=Lochness['pii_table'])
-    return
 
     # transfer new files after all sync attempts are done
     if args.lochness_sync_send:

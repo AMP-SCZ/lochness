@@ -397,7 +397,7 @@ def lochness_to_lochness_transfer_s3(Lochness,
                         stderr=subprocess.PIPE)
                 if 'upload' in str(result.stdout):
                     output_str = '\n'.join([f'{current_time} {x}' for x in
-                                             result.stdout.split('\n')
+                                             str(result.stdout).split('\n')
                                              if 'upload' in x]) + '\n'
                     fp.write(output_str)
 
@@ -602,7 +602,7 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                             stderr=subprocess.PIPE)
                     if 'upload' in str(result.stdout):
                         output_str = '\n'.join([f'{current_time} {x}' for x in
-                                                 result.stdout.split('\n')
+                                                 str(result.stdout).split('\n')
                                                  if 'upload' in x]) + '\n'
                         fp.write(output_str)
             logger.debug(f'aws rsync completed: {source_directory}')

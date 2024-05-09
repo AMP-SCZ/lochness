@@ -317,7 +317,23 @@ def sync_xnatpy(Lochness, subject, dry=False):
 
                     shutil.move(downloaded_file_path, dst)
                     os.chmod(dst, 0o0755)
-                    kill_process_by_name('dataorc')
+                    save_last_downloaded_subject(Lochness, subject.id)
+                    return 'completed'
+
+
+
+def save_last_downloaded_subject(Lochness, subject_label:str):
+    log_file = Path(Lochness['phoenix_root']).parent / '.last_xnat_sync_id'
+    with open(log_file, 'w') as fp:
+        fp.write(f"{subject_label}")
+
+
+def load_last_downloaded_subject(Lochness) -> tuple:
+    log_file = Path(Lochness['phoenix_root']).parent / '.last_xnat_sync_id'
+    with open(log_file, 'r') as fp:
+        subject_label = fp.readline().strip()
+
+    return subject_label
 
 
 def check_consistency(d, experiment):

@@ -349,7 +349,11 @@ def lochness_to_lochness_transfer_s3(Lochness,
         command = f"aws s3 cp \
                 {metadata_file} \
                 s3://{s3_bucket_name}/{s3_phoenix_metadata}"
-        os.popen(command).read()
+        result = subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
     logger.debug('Syncing metadata files completed')
 
     logger.debug('Syncing source files')
@@ -386,13 +390,18 @@ def lochness_to_lochness_transfer_s3(Lochness,
             now = datetime.now()
             current_time = now.strftime("%Y-%m-%d %H:%M:%S")
             with open(s3_sync_stdout, 'a') as fp:
-                command_str = '\n'.join([f'{current_time} {x}' for x in
-                                         os.popen(command).read().split('\n')
-                                         if 'upload' in x]) + '\n'
-                fp.write(command_str)
+                result = subprocess.run(
+                        command,
+                        shell=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+                if 'upload' in str(result.stdout):
+                    output_str = '\n'.join([f'{current_time} {x}' for x in
+                                             str(result.stdout).split('\n')
+                                             if 'upload' in x]) + '\n'
+                    fp.write(output_str)
 
-            logger.debug(command_str)
-            logger.debug('aws rsync completed')
+            logger.debug(f'aws rsync completed: {source_directory}')
 
     # sync redcap dictionary
     redcap_dict = Path(Lochness['phoenix_root']) / 'GENERAL/redcap_metadata.csv'
@@ -582,27 +591,32 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                         s3://{s3_bucket_name}/{s3_phoenix_root_dtype} \
                         --exclude '*.mp3' --exclude '.check_sum*'"
 
-                logger.debug(re.sub(r'\s+', r' ', command))
-
+                # logger.debug(re.sub(r'\s+', r' ', command))
                 now = datetime.now()
                 current_time = now.strftime("%Y-%m-%d %H:%M:%S")
                 with open(s3_sync_stdout, 'a') as fp:
-                    command_str = '\n'.join(
-                            [f'{current_time} {x}' for x in
-                             os.popen(command).read().split('\n')
-                             if 'upload' in x]) + '\n'
-                    fp.write(command_str)
-
+                    result = subprocess.run(
+                            command,
+                            shell=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+                    if 'upload' in str(result.stdout):
+                        output_str = '\n'.join([f'{current_time} {x}' for x in
+                                                 str(result.stdout).split('\n')
+                                                 if 'upload' in x]) + '\n'
+                        fp.write(output_str)
+            logger.debug(f'aws rsync completed: {source_directory}')
 
         logger.debug(f'aws rsync completed "{datatype}" datatype')
 
     # interview run sheets
     # phoenix_root / PROTECTED / site / raw / subject / datatype
+    if not is_datatype_in_sources('interviews', sources):
+        return
+
     interview_dirs = Path(Lochness['phoenix_root']).glob(
         f'PROTECTED/*/raw/*/interviews')
 
-    if not is_datatype_in_sources('interviews', sources):
-        return
 
     for interview_dir in interview_dirs:
         if not is_phoenix_path_from_sitelist(interview_dir, 
@@ -625,12 +639,17 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d %H:%M:%S")
         with open(s3_sync_stdout, 'a') as fp:
-            command_str = '\n'.join(
-                    [f'{current_time} {x}' for x in
-                     os.popen(command).read().split('\n')
-                     if 'upload' in x]) + '\n'
-            fp.write(command_str)
-
+            result = subprocess.run(
+                    command,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            if 'upload' in str(result.stdout):
+                output_str = '\n'.join([f'{current_time} {x}' for x in
+                                         result.stdout.split('\n')
+                                         if 'upload' in x]) + '\n'
+                fp.write(output_str)
+        logger.debug(f'aws rsync completed: {output_str}')
     logger.debug(f'aws rsync completed for interview run sheets')
 
 

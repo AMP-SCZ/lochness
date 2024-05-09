@@ -98,7 +98,7 @@ def update_actigraphy_check(df: pd.DataFrame) -> pd.DataFrame:
     act_index = df[df['modality'] == 'Actigraphy'].index
     act_df = df.loc[act_index]
     act_df['file_check'] = act_df['file_name'].str.match(
-            '[A-Z]{2}\d{5}_\d{5}_\d{4}\d{2}\d{2}.cwa')
+            '[A-Z]{2}\d{5}_\d{5,6}_\d{4}\d{2}\d{2}.cwa')
 
 
     df.loc[act_index] = act_df

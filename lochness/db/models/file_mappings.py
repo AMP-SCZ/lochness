@@ -19,6 +19,7 @@ class FileMapping:
         local_file_path (Path): The path to the file on the local file system.
         remote_name (str): The name of the remote system.
         subject_id (str): The subject ID assciated with this asset.
+        modality (str): The modality associated with this asset.
     """
 
     def __init__(
@@ -27,6 +28,7 @@ class FileMapping:
         local_file_path: Path,
         remote_name: str,
         subject_id: str,
+        modality: str,
     ):
         """
         Initialize a FileMapping object.
@@ -36,18 +38,21 @@ class FileMapping:
             local_file_path (Path): The path to the file on the local file system.
             remote_name (str): The name of the remote system.
             subject_id (str): The subject ID associated with this asset.
+            modality (str): The modality associated with this asset.
         """
         self.remote_file_path = remote_file_path
         self.local_file_path = local_file_path
         self.remote_name = remote_name
         self.subject_id = subject_id
+        self.modality = modality
 
     def __str__(self):
         """
         Return a string representation of the FileMapping object.
         """
         return f"FileMapping({self.remote_file_path},\
-            {self.local_file_path}, {self.remote_name}, {self.subject_id})"
+            {self.local_file_path}, {self.remote_name}, {self.subject_id}, \
+            {self.modality})"
 
     def __repr__(self):
         """
@@ -66,6 +71,7 @@ class FileMapping:
             remote_name TEXT NOT NULL,
             local_file_path TEXT NOT NULL,
             subject_id TEXT NOT NULL,
+            modality TEXT NOT NULL,
             PRIMARY KEY (remote_file_path, local_file_path, remote_name, subject_id)
         );
         """
@@ -91,9 +97,14 @@ class FileMapping:
         local_file_path = db.santize_string(self.local_file_path)
         remote_name = db.santize_string(self.remote_name)
         subject_id = db.santize_string(self.subject_id)
+        modality = db.santize_string(self.modality)
 
         return f"""
-            INSERT INTO file_mappings (remote_file_path, local_file_path, remote_name, subject_id)
-            VALUES ('{remote_file_path}', '{local_file_path}', '{remote_name}', '{subject_id}')
+            INSERT INTO file_mappings (
+                remote_file_path, local_file_path, remote_name,
+                subject_id, modality
+            ) VALUES (
+                '{remote_file_path}', '{local_file_path}', '{remote_name}',
+                '{subject_id}', '{modality}'
             ON CONFLICT DO NOTHING;
         """

@@ -40,10 +40,11 @@ def import_metadata_df(
                 optional_notes[column] = row[column]
 
         consent_date = pd.to_datetime(row["Consent"]).to_pydatetime()
+        is_active = row["Active"] == '1'
         subject = Subject(
             study_id=study_id,
             subject_id=row["Subject ID"],
-            is_active=row["Active"],
+            is_active=is_active,
             consent_date=consent_date,
             optional_notes=optional_notes,
         )

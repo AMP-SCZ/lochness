@@ -72,7 +72,10 @@ class FileMapping:
             local_file_path TEXT NOT NULL,
             subject_id TEXT NOT NULL,
             modality TEXT NOT NULL,
-            PRIMARY KEY (remote_file_path, local_file_path, remote_name, subject_id)
+            PRIMARY KEY (remote_file_path, local_file_path, remote_name, subject_id),
+            FOREIGN KEY (remote_file_path, remote_name) REFERENCES remote_files(r_file_path, r_remote_name),
+            FOREIGN KEY (local_file_path) REFERENCES phoenix_files(p_file_path),
+            FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
         );
         """
 

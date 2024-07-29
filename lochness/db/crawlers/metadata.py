@@ -53,5 +53,5 @@ def import_metadata_df(
         subject_sql = subject.to_sql()
         queries.append(subject_sql)
 
-    db.execute_queries(lochness_config=lochness_config, queries=queries)
+    db.execute_queries(lochness_config=lochness_config, queries=queries, show_commands=False)
     logger.info(f"Successfully imported metadata for study {study_id}")

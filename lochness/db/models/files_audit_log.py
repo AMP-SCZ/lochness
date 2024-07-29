@@ -3,6 +3,7 @@
 AuditLog Model
 """
 from typing import Dict
+from datetime import datetime
 
 from lochness import db
 
@@ -27,7 +28,7 @@ class AuditLog:
         system: str,
         action: str,
         metadata: Dict[str, str],
-        timestamp: str,
+        timestamp: datetime,
     ):
         """
         Initialize an AuditLog object.
@@ -107,7 +108,6 @@ AuditLog(
         system = db.santize_string(self.system)
         action = db.santize_string(self.action)
         metadata = db.santize_string(self.metadata)
-        timestamp = db.santize_string(self.timestamp)
 
         sql_query = f"""
         INSERT INTO audit_log (
@@ -115,7 +115,7 @@ AuditLog(
             action, metadata, timestamp
         ) VALUES (
             '{source_file}', '{destination_file}', '{system}',
-            '{action}', '{metadata}', '{timestamp}'
+            '{action}', '{metadata}', '{self.timestamp}'
         );
         """
 

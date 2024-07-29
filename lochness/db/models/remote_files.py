@@ -63,7 +63,7 @@ class RemoteFile:
         CREATE TABLE remote_files (
             r_file_path TEXT NOT NULL,
             r_remote_name TEXT NOT NULL,
-            r_hash_val TEXT NOT NULL,
+            r_hash_val TEXT,
             r_last_checked TIMESTAMP NOT NULL,
             r_remote_metadata JSONB,
             PRIMARY KEY (r_file_path, r_remote_name)

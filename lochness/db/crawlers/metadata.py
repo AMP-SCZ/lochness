@@ -23,6 +23,7 @@ def import_metadata_df(
     Args:
         metadata_df (pd.DataFrame): The DataFrame containing the columns:
             'Subject ID', 'Active', 'Consent', '...'.
+            Note.: This DataFrame is generally obtained from RPMS or REDCap modules.
         study_id (str): The study ID.
     """
     logger.info(f"Importing metadata for study {study_id}")

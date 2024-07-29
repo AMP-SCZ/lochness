@@ -2,8 +2,7 @@
 Contains DB models for Lochness.
 """
 
-from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict, Any
 
 from lochness import db
 from lochness.db.models.study import Study
@@ -32,7 +31,7 @@ def flatten_list(coll: list) -> list:
     return flat_list
 
 
-def init_db(config_file: Path):
+def init_db(lochness_config: Dict[str, Any]) -> None:
     """
     Initializes the database.
 
@@ -64,6 +63,7 @@ def init_db(config_file: Path):
     sql_queries: List[str] = drop_queries + create_queries
 
     db.execute_queries(
-        config_file=config_file,
+        lochness_config=lochness_config,
         queries=sql_queries,
+        show_commands=True,
     )

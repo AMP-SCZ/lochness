@@ -66,7 +66,7 @@ class RemoteFile:
             r_hash_val TEXT NOT NULL,
             r_last_checked TIMESTAMP NOT NULL,
             r_remote_metadata JSONB,
-            PRIMARY KEY (file_path, remote_name)
+            PRIMARY KEY (r_file_path, r_remote_name)
         );
         """
 

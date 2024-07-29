@@ -1,25 +1,24 @@
-import os, sys
-import gzip
+"""
+Module to sync data from Mediaflux.
+"""
 import logging
-import importlib
-import lochness
-import tempfile as tf
-import cryptease as crypt
-import lochness.net as net
-from typing import Generator, Tuple
-from pathlib import Path
-import hashlib
-from io import BytesIO
-import lochness.keyring as keyring
-from os.path import join as pjoin, basename, dirname, isfile
-import cryptease as enc
+import os
 import re
-from subprocess import Popen, DEVNULL, STDOUT
-import pandas as pd
-from numpy import nan
+import tempfile as tf
 from distutils.spawn import find_executable
+from os.path import basename, dirname, isfile
+from os.path import join as pjoin
+from pathlib import Path
+from subprocess import DEVNULL, STDOUT, Popen
+
+import cryptease as enc
+import pandas as pd
+
+import lochness
+import lochness.keyring as keyring
 import lochness.tree as tree
 from lochness.cleaner import is_transferred_and_removed
+from lochness.db import log as db_log
 
 logger = logging.getLogger(__name__)
 Module = lochness.lchop(__name__, 'lochness.')
@@ -205,6 +204,19 @@ def sync_module(Lochness: 'lochness.config',
                             p = Popen(cmd, shell=True,
                                       stdout=DEVNULL, stderr=STDOUT)
                             p.wait()
+
+                            # log download to DB
+                            db_log.log_download(
+                                lochness_config=Lochness,
+                                remote_file_path=Path(remote),
+                                remote_name='mediaflux',
+                                remote_hash=checksum,
+                                remote_metadata={},
+                                local_file_path=Path(mf_local) / subpath.name,
+                                subject_id=subject.id,
+                                study_id=study_name,
+                                modality=datatype
+                            )
 
                             # write checksum to local
                             with open(prev_checksum_file, 'w') as fp:

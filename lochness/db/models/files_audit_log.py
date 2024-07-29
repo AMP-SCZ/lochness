@@ -75,7 +75,7 @@ AuditLog(
         Return the SQL query to create the 'audit_log' table.
         """
         sql_query = """
-        CREATE TABLE IF audit_log (
+        CREATE TABLE audit_log (
             source_file TEXT NOT NULL,
             destination_file TEXT,
             system TEXT NOT NULL,
@@ -111,7 +111,7 @@ AuditLog(
 
         sql_query = f"""
         INSERT INTO audit_log (
-            source_file, destination_file, system, 
+            source_file, destination_file, system,
             action, metadata, timestamp
         ) VALUES (
             '{source_file}', '{destination_file}', '{system}',

@@ -3,6 +3,8 @@ from typing import Dict, List
 from sqlalchemy import create_engine, Column, String, DateTime, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session as SessionType
+from lochness import db
+
 
 # Define the database connection (replace with your actual database URI)
 DATABASE_URI = 'postgresql://username:password@localhost:5432/mydatabase'
@@ -64,9 +66,9 @@ if __name__ == "__main__":
 
     # Example to add a RemoteFile
     remote_file = RemoteFile(
-        file_path='/path/to/file',
-        remote_name='remote_system',
-        hash_val='abcdef123456',
+        file_path=db.santize_string('/path/to/file'),
+        remote_name=db.santize_string('remote_system'),
+        hash_val=db.santize_string(('abcdef123456'),
         last_checked=datetime.now(),
         remote_metadata={'key': 'value'}
     )

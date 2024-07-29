@@ -2,14 +2,15 @@
 Contains DB models for Lochness.
 """
 
-from typing import List, Union, Dict, Any
+from typing import Any, Dict, List, Union
 
 from lochness import db
-from lochness.db.models.study import Study
-from lochness.db.models.subject import Subject
+from lochness.db.models.file_mappings import FileMapping
+from lochness.db.models.files_audit_log import AuditLog
 from lochness.db.models.phoenix_files import PhoenixFiles
 from lochness.db.models.remote_files import RemoteFile
-from lochness.db.models.file_mappings import FileMapping
+from lochness.db.models.study import Study
+from lochness.db.models.subject import Subject
 
 
 def flatten_list(coll: list) -> list:
@@ -31,7 +32,7 @@ def flatten_list(coll: list) -> list:
     return flat_list
 
 
-def init_db(lochness_config: Dict[str, Any]) -> None:
+def init_db(lochness_config: Dict[str, Any]):
     """
     Initializes the database.
 
@@ -39,9 +40,10 @@ def init_db(lochness_config: Dict[str, Any]) -> None:
     DO NOT RUN THIS IN PRODUCTION.
 
     Args:
-        config_file (Path): Path to the config file.
+        lochness_config (Path): Path to the config file.
     """
     drop_queries_l: List[Union[str, List[str]]] = [
+        AuditLog.drop_table_query(),
         FileMapping.drop_table_query(),
         RemoteFile.drop_table_query(),
         PhoenixFiles.drop_table_query(),
@@ -55,6 +57,7 @@ def init_db(lochness_config: Dict[str, Any]) -> None:
         PhoenixFiles.init_table_query(),
         RemoteFile.init_table_query(),
         FileMapping.init_table_query(),
+        AuditLog.init_table_query(),
     ]
 
     drop_queries = flatten_list(drop_queries_l)

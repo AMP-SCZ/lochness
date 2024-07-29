@@ -78,8 +78,10 @@ class Subject:
         optional_notes = db.sanitize_json(self.optional_notes)
 
         sql_query = f"""
-        INSERT INTO subjects (study_id, subject_id, is_active, consent_date, optional_notes)
-        VALUES ('{self.study_id}', '{self.subject_id}', {self.is_active}, '{consent_date}', '{optional_notes}')
+        INSERT INTO subjects (study_id, subject_id, is_active,
+            consent_date, optional_notes)
+        VALUES ('{self.study_id}', '{self.subject_id}', {self.is_active},
+            '{consent_date}', '{optional_notes}')
         ON CONFLICT(study_id, subject_id) DO UPDATE SET
             is_active = excluded.is_active,
             consent_date = excluded.consent_date,

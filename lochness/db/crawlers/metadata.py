@@ -39,11 +39,12 @@ def import_metadata_df(
             if column not in ["Subject ID", "Active", "Consent"]:
                 optional_notes[column] = row[column]
 
+        consent_date = pd.to_datetime(row["Consent"]).to_pydatetime()
         subject = Subject(
             study_id=study_id,
             subject_id=row["Subject ID"],
             is_active=row["Active"],
-            consent_date=row["Consent"],
+            consent_date=consent_date,
             optional_notes=optional_notes,
         )
 

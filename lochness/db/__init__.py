@@ -118,8 +118,6 @@ def get_db_credentials(lochness_config: Dict[str, Any]) -> Dict[str, str]:
     Returns:
         Dict[str, str]: A dictionary containing the database credentials.
     """
-    # TODO: Support reading from Lochness Dict
-
     credentials = lochness_config["database"]
 
     return credentials
@@ -166,8 +164,8 @@ def execute_queries(
                 output.append(cur.fetchall())
             except psycopg2.ProgrammingError:
                 pass
-            for command in queries:
-                execute_query(command)
+        for command in queries:
+            execute_query(command)
 
         cur.close()
 

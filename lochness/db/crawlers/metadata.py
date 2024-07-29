@@ -3,12 +3,15 @@ Imports metadata information into DB.
 """
 
 from typing import Any, Dict
+import logging
 
 import pandas as pd
 
 from lochness import db
 from lochness.db.models.subject import Subject
 from lochness.db.models.study import Study
+
+logger = logging.getLogger("lochness.crawlers.metadata")
 
 
 def import_metadata_df(
@@ -22,12 +25,14 @@ def import_metadata_df(
             'Subject ID', 'Active', 'Consent', '...'.
         study_id (str): The study ID.
     """
+    logger.info(f"Importing metadata for study {study_id}")
     queries = []
 
     study = Study(study_id=study_id)
     insert_study_sql = study.to_sql()
     queries.append(insert_study_sql)
 
+    logger.debug(f"Found {metadata_df.shape[0]} subjects for study {study_id}")
     for _, row in metadata_df.iterrows():
         optional_notes = {}
         for column in metadata_df.columns:
@@ -46,3 +51,4 @@ def import_metadata_df(
         queries.append(subject_sql)
 
     db.execute_queries(lochness_config=lochness_config, queries=queries)
+    logger.info(f"Successfully imported metadata for study {study_id}")

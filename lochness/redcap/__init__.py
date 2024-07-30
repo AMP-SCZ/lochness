@@ -686,7 +686,7 @@ def sync(Lochness, subject, dry=False):
                 logger.debug(f"redcap_instance: {redcap_instance}")
                 if redcap_instance == 'redcap.UPENN':
                     upenn_id_colname = 'session_subid'
-                    continue
+                    continue  # skip downloading from the original UPENN redcap
                 elif redcap_instance == 'redcap.UPENN_nda':
                     upenn_id_colname = 'src_subject_id'
                 else:

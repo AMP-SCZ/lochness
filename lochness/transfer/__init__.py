@@ -349,7 +349,12 @@ def lochness_to_lochness_transfer_s3(Lochness,
         command = f"aws s3 cp \
                 {metadata_file} \
                 s3://{s3_bucket_name}/{s3_phoenix_metadata}"
-        os.popen(command).read()
+        result = subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True)
     logger.debug('Syncing metadata files completed')
 
     logger.debug('Syncing source files')
@@ -373,26 +378,7 @@ def lochness_to_lochness_transfer_s3(Lochness,
                                                  sites):
                 continue
 
-            s3_phoenix_root_dtype = re.sub(Lochness['phoenix_root'],
-                                           s3_phoenix_root,
-                                           str(source_directory))
-
-            command = f'aws s3 sync \
-                    {source_directory}/ \
-                    s3://{s3_bucket_name}/{s3_phoenix_root_dtype}'
-
-            # save aws 3 sync cmd stdout to a file
-            s3_sync_stdout = Path(Lochness['phoenix_root']) / 'aws_s3_sync_stdouts.log'
-            now = datetime.now()
-            current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-            with open(s3_sync_stdout, 'a') as fp:
-                command_str = '\n'.join([f'{current_time} {x}' for x in
-                                         os.popen(command).read().split('\n')
-                                         if 'upload' in x]) + '\n'
-                fp.write(command_str)
-
-            logger.debug(command_str)
-            logger.debug('aws rsync completed')
+            lochness_s3_dir(Lochness, source_directory)
 
     # sync redcap dictionary
     redcap_dict = Path(Lochness['phoenix_root']) / 'GENERAL/redcap_metadata.csv'
@@ -445,7 +431,9 @@ def create_s3_transfer_table(Lochness, rewrite=False) -> None:
 
     df = pd.DataFrame()
     with open(log_file, 'r') as fp:
-        for line in fp.readlines():
+        text = fp.read()
+
+        for line in text.splitlines():
             if not 'upload' in line:
                 continue
 
@@ -526,6 +514,70 @@ def create_s3_transfer_table(Lochness, rewrite=False) -> None:
     df.to_csv(out_file)
 
 
+def lochness_s3_dir(Lochness,
+                    source_directory,
+                    interview_run_sheets_only=False):
+    '''Lochness aws s3 sync for protected data
+
+    Key arguments:
+        Lochness: Lochness config.load object
+        dir_path: Path of the directory to be synced
+
+    Requirements:
+        - AWS CLI needs to be set with the correct credentials before executing
+        this module.
+            $ aws configure
+        - s3 bucket needs to be linked to the ID
+        - The name of the s3 bucket needs to be in the config.yml
+            eg) AWS_BUCKET_NAME: ampscz-dev
+                AWS_BUCKET_PHOENIX_ROOT: TEST_PHOENIX_ROOT
+
+    Notes:
+        - do not share .mp3 files from phone data
+    '''
+    s3_bucket_name = Lochness['AWS_BUCKET_NAME']
+    s3_phoenix_root = Lochness['AWS_BUCKET_ROOT']
+
+    # save aws 3 sync cmd stdout to a file
+    s3_sync_stdout = Path(Lochness['phoenix_root']) / 'aws_s3_sync_stdouts.log'
+
+    s3_phoenix_root_dtype = re.sub(Lochness['phoenix_root'],
+                                   s3_phoenix_root,
+                                   str(source_directory))
+
+    if interview_run_sheets_only:
+        command = f"aws s3 sync \
+                {interview_dir} \
+                s3://{s3_bucket_name}/{s3_target} \
+                --follow-symlinks \
+                --exclude='*' --include='*Run_sheet_interviews_*.csv'"
+    else:
+        command = f"aws s3 sync \
+                {source_directory}/ \
+                s3://{s3_bucket_name}/{s3_phoenix_root_dtype} \
+                --follow-symlinks \
+                --exclude '*.mp3' --exclude '.check_sum*'"
+    command = re.sub(r'\s+', r' ', command)
+    logger.debug(f's3 command: {command}')
+
+
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    with open(s3_sync_stdout, 'a') as fp:
+        result = subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True)
+        if 'upload' in str(result.stdout):
+            output_str = '\n'.join([f'{current_time} {x}' for x in
+                                     result.stdout.split('\n')
+                                     if 'upload' in x]) + '\n'
+            fp.write(output_str)
+        logger.debug(f'aws rsync completed: {source_directory}')
+
+
 def lochness_to_lochness_transfer_s3_protected(Lochness,
                                                sites: List[str],
                                                sources: List[str]):
@@ -572,65 +624,28 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                                                      Lochness['phoenix_root'],
                                                      sites):
                     pass
-                    #continue
-
-                s3_phoenix_root_dtype = re.sub(Lochness['phoenix_root'],
-                                               s3_phoenix_root,
-                                               str(source_directory))
-                command = f"aws s3 sync \
-                        {source_directory}/ \
-                        s3://{s3_bucket_name}/{s3_phoenix_root_dtype} \
-                        --exclude '*.mp3' --exclude '.check_sum*'"
-
-                logger.debug(re.sub(r'\s+', r' ', command))
-
-                now = datetime.now()
-                current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-                with open(s3_sync_stdout, 'a') as fp:
-                    command_str = '\n'.join(
-                            [f'{current_time} {x}' for x in
-                             os.popen(command).read().split('\n')
-                             if 'upload' in x]) + '\n'
-                    fp.write(command_str)
-
+                lochness_s3_dir(Lochness, source_directory)
+            logger.debug(f'aws rsync completed: {source_directory}')
 
         logger.debug(f'aws rsync completed "{datatype}" datatype')
 
     # interview run sheets
     # phoenix_root / PROTECTED / site / raw / subject / datatype
+    if not is_datatype_in_sources('interviews', sources):
+        return
+
     interview_dirs = Path(Lochness['phoenix_root']).glob(
         f'PROTECTED/*/raw/*/interviews')
 
-    if not is_datatype_in_sources('interviews', sources):
-        return
 
     for interview_dir in interview_dirs:
         if not is_phoenix_path_from_sitelist(interview_dir, 
                                              Lochness['phoenix_root'],
                                              sites):
             continue
-
-        s3_target = re.sub(Lochness['phoenix_root'],
-                           s3_phoenix_root,
-                           str(interview_dir))
-
-
-        command = f"aws s3 sync \
-                {interview_dir} \
-                s3://{s3_bucket_name}/{s3_target} \
-                --exclude='*' --include='*Run_sheet_interviews_*.csv'"
-
-        logger.debug(re.sub(r'\s+', r' ', command))
-
-        now = datetime.now()
-        current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        with open(s3_sync_stdout, 'a') as fp:
-            command_str = '\n'.join(
-                    [f'{current_time} {x}' for x in
-                     os.popen(command).read().split('\n')
-                     if 'upload' in x]) + '\n'
-            fp.write(command_str)
-
+        lochness_s3_dir(Lochness,
+                        str(interview_dir),
+                        interview_run_sheets_only=True)
     logger.debug(f'aws rsync completed for interview run sheets')
 
 

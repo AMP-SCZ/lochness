@@ -30,6 +30,7 @@ from lochness.transfer import lochness_to_lochness_transfer_s3
 from lochness.transfer import lochness_to_lochness_transfer_s3_protected
 from lochness.transfer import create_s3_transfer_table
 from lochness.transfer import lochness_to_lochness_transfer_receive_sftp
+from lochness.xnat import load_last_downloaded_subject
 from lochness.email import send_out_daily_updates
 from datetime import datetime, date
 from lochness.cleaner import rm_transferred_files_under_phoenix
@@ -279,8 +280,13 @@ def do(args, Lochness):
         lochness.initialize_metadata(Lochness, args,
                                      multiple_site, upenn_redcap)
 
+
     n = 0
+    last_subject_synced = load_last_downloaded_subject(Lochness)
+    keep_loop = True
+    output = None
     for subject in lochness.read_phoenix_metadata(Lochness, args.studies):
+
         if n == 0:
             save_redcap_metadata(Lochness, subject)
 
@@ -300,14 +306,30 @@ def do(args, Lochness):
         else:
             for source, Module in zip(args.input_sources, args.source):
                 if source == 'xnat':
-                    lochness.attempt(Module.sync_xnatpy, Lochness,
-                                     subject, dry=args.dry)
+                    # if last_subject_synced == '':
+                        # keep_loop = True
+                    # elif subject.id == last_subject_synced:
+                        # logger.debug(f'Last subject downloaded: {subject.id}')
+                        # keep_loop = True
+                        # continue  # skip last synced
+                    # elif not keep_loop:
+                    if not keep_loop:
+                        continue  # skip subjects before last synced
+
+                    output = lochness.attempt(Module.sync_xnatpy, Lochness,
+                            subject, dry=args.dry, args=args)
+                    if output is not None:  # expecting 'completed'
+                        keep_loop = False
+
                 else:
                     lochness.attempt(Module.sync, Lochness,
                                      subject, dry=args.dry)
         n += 1
 
     # anonymize PII
+    
+    if 'xnat' == source:
+        return
 
     #if Lochness['s3_selective_sync']:
     #    dpanonymize.lock_lochness(

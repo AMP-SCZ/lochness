@@ -15,6 +15,7 @@ import lochness.net as net
 import lochness.tree as tree
 import lochness.config as config
 from lochness.cleaner import is_transferred_and_removed
+from lochness.transfer import lochness_s3_dir
 
 yaml.SafeDumper.add_representer(
         col.OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
@@ -219,7 +220,7 @@ def download_xnat_session_dataorc(
 
 
 @net.retry(max_attempts=5)
-def sync_xnatpy(Lochness, subject, dry=False):
+def sync_xnatpy(Lochness, subject, dry=False, args=None):
     """A new sync function with XNATpy"""
     logger.debug('exploring {0}/{1}'.format(subject.study, subject.id))
 
@@ -228,13 +229,17 @@ def sync_xnatpy(Lochness, subject, dry=False):
     # remove xnatpy tmp files
     logger.debug('Cleaning up xnatpy files')
     for tmp_file in Path(tmp_dir).glob('*generated_xnat.py'):
-        os.remove(tmp_file)
+        try:
+            os.remove(tmp_file)
+        except OSError as e:
+            logger.warning(f'Failed to remove {tmp_file}: {e}')
 
     for tmp_file in Path(tmp_dir).glob('tmp_xnat*'):
         try:
             os.rmdir(tmp_file)
         except OSError as e:
             logger.warning(f'Failed to remove {tmp_file}: {e}')
+
     logger.debug('Cleaning up xnatpy files - completed')
 
     for alias, xnat_uids in iter(subject.xnat.items()):
@@ -317,7 +322,29 @@ def sync_xnatpy(Lochness, subject, dry=False):
 
                     shutil.move(downloaded_file_path, dst)
                     os.chmod(dst, 0o0755)
-                    kill_process_by_name('dataorc')
+                    if args.lochness_sync_send and args.s3:
+                        if 'mri' in Lochness['s3_selective_sync']:
+                            logger.debug(f'Syncing {dst}')
+                            lochness_s3_dir(Lochness, Path(dst).parent)
+                    save_last_downloaded_subject(Lochness, subject.id)
+                    return 'completed'
+
+
+def save_last_downloaded_subject(Lochness, subject_label:str):
+    log_file = Path(Lochness['phoenix_root']).parent / '.last_xnat_sync_id'
+    with open(log_file, 'w') as fp:
+        fp.write(f"{subject_label}")
+
+
+def load_last_downloaded_subject(Lochness) -> tuple:
+    log_file = Path(Lochness['phoenix_root']).parent / '.last_xnat_sync_id'
+    if not log_file.is_file():
+        return ''
+
+    with open(log_file, 'r') as fp:
+        subject_label = fp.readline().strip()
+
+    return subject_label
 
 
 def check_consistency(d, experiment):

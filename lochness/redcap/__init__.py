@@ -179,7 +179,7 @@ def initialize_metadata(Lochness: 'Lochness object',
         subject_dict['REDCap'] += \
                 f';redcap.UPENN:{row[redcap_id_colname]}'  # UPENN REDCAP
         subject_dict['REDCap'] += \
-                f';redcap.UPENN_new:{row[redcap_id_colname]}'  # UPENN REDCAP
+                f';redcap.UPENN_nda:{row[redcap_id_colname]}'  # UPENN REDCAP
         subject_dict['Box'] = f'box.{study_name}:{subject_id}'
         subject_dict['XNAT'] = f'xnat.{study_name}:*:{subject_id}'
 
@@ -681,10 +681,10 @@ def sync(Lochness, subject, dry=False):
             _debug_tup = (redcap_instance, redcap_project, redcap_subject)
 
             if 'UPENN' in redcap_instance:
-                print(redcap_instance)
                 if redcap_instance == 'redcap.UPENN':
+                    continue
                     upenn_id_colname = 'session_subid'
-                elif redcap_instance == 'redcap.UPENN_new':
+                elif redcap_instance == 'redcap.UPENN_nda':
                     upenn_id_colname = 'src_subject_id'
                 else:
                     logger.warning('Wrong upenn_id_colname. Check REDCap code')
@@ -864,6 +864,7 @@ def redcap_projects(Lochness, phoenix_study, redcap_instance):
                            'not found in keyring')
 
     if redcap_instance not in Keyring['lochness']['REDCAP'][phoenix_study]:
+        print(Keyring)
         raise KeyringError(f'lochness > REDCAP > {phoenix_study} '
                            f'> {redcap_instance} not found in keyring')
 
@@ -984,7 +985,6 @@ if __name__ == '__main__':
     keyring = Lochness['keyring']
     api_url = keyring['redcap.Pronet']['URL'] + '/api/'
     api_key = keyring['redcap.Pronet']['API_TOKEN']['Pronet']
-    print(api_url, api_key)
     subjects = list(lochness.read_phoenix_metadata(Lochness, ['PronetYA']))
     subject = subjects[1]
 

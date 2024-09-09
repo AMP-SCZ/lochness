@@ -149,7 +149,7 @@ def mediaflux_api_token(Lochness, key):
             f.write(f'{item.lower()}={auths[item]}\n')
 
     # for security, make the mflux.cfg readable by the owner only
-    os.chmod(mflux_cfg, 0o600)
+    os.chmod(mflux_cfg, 0o660)
 
     return mflux_cfg
 

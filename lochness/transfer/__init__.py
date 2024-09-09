@@ -374,9 +374,9 @@ def lochness_to_lochness_transfer_s3(Lochness,
                                            s3_phoenix_root,
                                            str(source_directory))
 
-            command = f'aws s3 sync \
+            command = f"aws s3 sync \
                     {source_directory}/ \
-                    s3://{s3_bucket_name}/{s3_phoenix_root_dtype}'
+                    s3://{s3_bucket_name}/{s3_phoenix_root_dtype}"
 
             # save aws 3 sync cmd stdout to a file
             s3_sync_stdout = Path(Lochness['phoenix_root']) / 'aws_s3_sync_stdouts.log'
@@ -562,7 +562,8 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                         {source_directory}/ \
                         s3://{s3_bucket_name}/{s3_phoenix_root_dtype} \
                         --exclude '*.mp3' --exclude '.check_sum*' \
-                        --exclude '.checksum*' "
+                        --exclude '.checksum*'"
+                        # --exclude='*Run_sheet*'"
 
                 # logger.debug(re.sub(r'\s+', r' ', command))
 

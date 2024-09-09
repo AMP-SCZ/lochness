@@ -446,7 +446,7 @@ def collect_mediaflux_files_info(Lochness: 'lochness',
 
 def get_subject_list_from_metadata(Lochness: 'lochness') -> List[str]:
     '''Get list of subjects form metadata under GENERAL directories'''
-    general_path = Path(Lochness['phoenix_root']) / 'GENERAL'
+    general_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
     metadata_file_paths = general_path.glob('*/*_metadata.csv')
 
     subject_id_list = []
@@ -458,14 +458,16 @@ def get_subject_list_from_metadata(Lochness: 'lochness') -> List[str]:
 
 def get_all_rpms_subjects_with_consent(Lochness) -> pd.DataFrame:
     '''Get df with the 'subject' column of subjects IDs from metadata file'''
-    general_path = Path(Lochness['phoenix_root']) / 'GENERAL'
+    general_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
     metadata_file_paths = general_path.glob('*/*_metadata.csv')
     project_name = Lochness['project_name']
 
     df = pd.DataFrame()
     # consent check True
     for metadata_file in metadata_file_paths:
+        print(metadata_file)
         df = pd.concat([df, pd.read_csv(metadata_file)[['Subject ID']]])
+    print(df)
     df.columns = ['subject']
 
     if len(df) > 1:
@@ -522,11 +524,11 @@ def check_source(Lochness: 'lochness', test: bool = False) -> None:
         mediaflux_df = collect_mediaflux_files_info(Lochness, ignore_id_list)
         # Penn CNB
         keyring = Lochness['keyring']
-        penn_cnb_df = check_list_all_penn_cnb_subjects(
-                project_name, keyring, subject_id_list, ignore_id_list)
+        # penn_cnb_df = check_list_all_penn_cnb_subjects(
+                # project_name, keyring, subject_id_list, ignore_id_list)
         all_df = check_file_path_df(mediaflux_df, subject_id_list)
         all_df = all_df[all_df['site'].str.startswith('Prescient')]
-        all_df = pd.concat([all_df, penn_cnb_df])
+        # all_df = pd.concat([all_df, penn_cnb_df])
         consent_df = get_all_rpms_subjects_with_consent(Lochness)
 
     elif project_name == 'ProNET':
@@ -649,6 +651,6 @@ if __name__ == '__main__':
     # config_loc = '/opt/software/Pronet_data_sync/config.yml'
     Lochness = load(config_loc)
     Lochness['file_check_notify']['__global__'] = [
-            'kevincho@bwh.harvard.edu']
-    # check_source(Lochness, test=True)
-    check_source(Lochness, test=False)
+            'dmohandass@mgh.harvard.edu']
+    check_source(Lochness, test=True)
+    # check_source(Lochness, test=False)

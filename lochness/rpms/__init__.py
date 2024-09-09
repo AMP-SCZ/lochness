@@ -339,7 +339,9 @@ def initialize_metadata(Lochness: 'Lochness object',
     # single item for the subject in the RPMS pulled `content`
     # remove empty lables
     df_final = pd.DataFrame()
+
     for _, table in df.groupby(['Subject ID']):
+        table['Consent'] = pd.to_datetime(table['Consent']).min()
         pad_filled = table.fillna(
                 method='ffill').fillna(method='bfill').iloc[0]
         df_final = pd.concat([df_final, pad_filled], axis=1)

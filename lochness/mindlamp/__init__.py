@@ -196,11 +196,12 @@ def sync(Lochness: 'lochness.config',
             jsonData = json.dumps(
                 data_dict,
                 sort_keys=True, indent=3, separators=(',', ': '))
+            logger.debug(f"jsonData from mindlamp: {jsonData}")
 
             content = jsonData.encode()
             
             if content.strip() == b'[]':
-                logger.info(f'No mindlamp data for {subject_id} {date_str}')
+                logger.info(f'No mindlamp data for {subject.id} {subject_id} {date_str}')
                 continue
 
             lochness.atomic_write(dst, content)
@@ -349,6 +350,7 @@ def get_activity_events_lamp(
     activity_events_dicts = lamp.ActivityEvent.all_by_participant(
                     subject_id, _from=from_ts, to=to_ts,
                     _limit=LIMIT)['data']
+    logger.debug(f"command: {subject_id}, {from_ts}, {to_ts}, {LIMIT}")
     return activity_events_dicts
 
 

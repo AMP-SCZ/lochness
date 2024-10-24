@@ -19,3 +19,7 @@ transfer,path_in_host,****
 transfer,port,****
 redcap,API_TOKEN,****
 redcap,URL,****
+mindlamp_admin,token,****
+mindlamp_admin,access_key,admin
+mindlamp_admin,secret_key,c0b50a5af972b2a1b2d6cd299dc37703c22e8ddd5dfd15f0d83ca7a1cb8bcc7e
+mindlamp_admin,api_urlmindlamp.orygen.org.au

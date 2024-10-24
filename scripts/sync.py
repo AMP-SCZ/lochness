@@ -6,6 +6,7 @@ import time
 import lochness
 import logging
 import importlib
+import pandas as pd
 import argparse as ap
 from pathlib import Path
 import lochness.config as config
@@ -52,6 +53,45 @@ SOURCES = {
 DIR = os.path.dirname(__file__)
 
 logger = logging.getLogger(os.path.basename(__file__))
+
+
+def sync_lock(args, Lochness) -> None:
+    sync_lock = Path(Lochness['phoenix_root']) / \
+            'sync_lock_file_history.csv'
+
+    logger.info('Loading sync lock history db')
+    if sync_lock.is_file():
+        sync_lock_df = pd.read_csv(sync_lock)
+    else:
+        sync_lock_df = pd.DataFrame(
+                columns=['file_path',
+                         'file_modified_at',
+                         'sync_lock_released_at'])
+
+    while True:
+        file_list = Path(args.sync_after_update_in_file).parent.glob(
+                Path(args.sync_after_update_in_file).name)
+
+        for file_path in file_list:
+            logger.info(f'checking if {file_path} was seen before')
+            if str(file_path) in sync_lock_df.file_path.tolist():
+                logger.info(f'Sleep - seen this file before')
+                continue
+            else:
+                logger.info(f'New file!')
+                sync_lock_df_tmp = pd.DataFrame({
+                    'file_path': [file_path],
+                    'file_modified_at': file_path.stat().st_mtime,
+                    'sync_lock_released_at': datetime.now()
+                    })
+                sync_lock_df = pd.concat([sync_lock_df,
+                                          sync_lock_df_tmp])
+                sync_lock_df.to_csv(sync_lock)
+
+                return
+
+        time.sleep(1800)
+
 
 def main():
     parser = ap.ArgumentParser(description='PHOENIX data syncer')
@@ -109,6 +149,10 @@ def main():
                         action='store_true',
                         help='Remove old files which are already transferred '
                              'to s3 from PHOENIX directory')
+    parser.add_argument('-sa', '--sync_after_update_in_file',
+                        type=str,
+                        help='Path patterns to look for a new file for a sync '
+                             'to start')
     args = parser.parse_args()
 
     # configure logging for this application
@@ -143,9 +187,14 @@ def main():
         logger.info('pausing execution until {0}'.format(until))
         scheduler.until(until)
 
+
     # run downloader once, or continuously
     if args.continuous:
         while True:
+            if args.sync_after_update_in_file:
+                logger.info('Sync lock option is on')
+                sync_lock(args, Lochness)
+
             # remove already transferred files
             if args.remove_old_files:
                 rm_transferred_files_under_phoenix(
@@ -154,6 +203,8 @@ def main():
                         removed_df_loc=Lochness['removed_df_loc'],
                         removed_phoenix_root=Lochness['removed_phoenix_root'])
 
+            logger.info("Running sync from script/sync.py")
+            logger.info(f"args: {args}")
             do(args, Lochness)
 
             email_dates_file = Path(Lochness['phoenix_root']).parent / \
@@ -220,6 +271,8 @@ def do(args, Lochness):
         lochness.initialize_metadata(Lochness, args,
                                      multiple_site, upenn_redcap)
 
+    logger.info(f"Studies: {' '.join(args.studies)}")
+    
     n = 0
     for subject in lochness.read_phoenix_metadata(Lochness, args.studies):
         if n == 0:

@@ -124,9 +124,9 @@ def get_run_sheets_for_datatypes(target_df_loc: Union[Path, str]) -> None:
     Returns:
         - None
     '''
-    target_df_loc = Path(target_df_loc)
-    if not target_df_loc.is_file():
-        return
+    # target_df_loc = Path(target_df_loc)
+    # if not target_df_loc.is_file():
+        # return
 
     modality_fieldname_dict = {'eeg': 'eeg_run_sheet',
                                'actigraphy': 'Actigraphy',
@@ -136,6 +136,7 @@ def get_run_sheets_for_datatypes(target_df_loc: Union[Path, str]) -> None:
 
     for modality, fieldname in modality_fieldname_dict.items():
         if target_df_loc.name.endswith(f"_{fieldname}.csv"):
+            print(modality, fieldname)
             raw_subject_path = target_df_loc.parent.parent
             subject = raw_subject_path.name
             study = 'Prescient' + subject[:2]
@@ -432,7 +433,7 @@ def sync(Lochness, subject, dry=False):
                                makedirs=True)
         proc_dst = Path(proc_folder) / f"{subject_id}_{measure}.csv"
 
-        get_run_sheets_for_datatypes(target_df_loc)
+        # get_run_sheets_for_datatypes(target_df_loc)
         # if the csv already exists, compare the dataframe
         if Path(target_df_loc).is_file():
             # index might be different, so drop it before comparing it

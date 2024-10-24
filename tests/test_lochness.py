@@ -354,7 +354,15 @@ def initialize_metadata_test(phoenix_root: 'phoenix root',
 
     # for each record in pulled information, extract subject ID and source IDs
     for source, id_dicts in sources_id_dict.items():
+        print('*'*80)
+        print(id_dicts)
+        print(id_dicts)
+        print(id_dicts)
+        print('*'*80)
         for id_dict in id_dicts:
+            print(id_dict)
+            print(id_dict)
+            print(id_dict)
             subject_dict = {'Subject ID': id_dict['subject_id']}
 
             # Consent date

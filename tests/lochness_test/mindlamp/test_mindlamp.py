@@ -356,15 +356,19 @@ def test_sync_mindlamp_orygen_admin(args):
     # _ = KeyringAndEncryptMindlampYoon(args.outdir)
 
     phoenix_root = args.outdir / 'PHOENIX'
-    information_to_add_to_metadata = {'mindlamp': {'subject_id': '1001',
-                                                   'source_id': 'U2862696942'}}
+    information_to_add_to_metadata = {'mindlamp': [{'subject_id': '1001',
+                                                   'source_id': 'U1829236290'}]}
                                                    # 'source_id': 'U5891709819'}}
                                                    # 'source_id': 'U3025891176'}}
     
-    initialize_metadata_test(phoenix_root, 'StudyA',
-                             information_to_add_to_metadata)
+    initialize_metadata_test(
+            phoenix_root,
+            'StudyA',
+            information_to_add_to_metadata)
+
     Lochness = config_load_test(syncArgs.config)
     for subject in lochness.read_phoenix_metadata(Lochness, syncArgs.studies):
+        print(subject)
         sync(Lochness, subject, False)
 
 

@@ -330,3 +330,20 @@ def test_subjects_with_multiple_consent_dates():
     with open('tmp_subject_id_to_check.txt', 'r') as fp:
         subject_id = fp.read().strip()
     print(df[df['Subject ID']==subject_id]['Consent'])
+
+
+def test_get_run_sheets_for_datatypes():
+    class SubjectObj():
+        def __init__(self, id):
+            self.id = id
+
+    subject_id = 'ME50349'
+    rpms_root_path = Path('/var/lib/prescient/RPMS_incoming')
+    all_df_dict = get_rpms_database(rpms_root_path)
+    subject_df_dict = get_subject_data(all_df_dict,
+                                       SubjectObj(subject_id),
+                                       'subjectkey')
+    for measure, source_df in subject_df_dict.items():
+        target_df_loc = Path('/var/lib/prescient/data/PHOENIX/PROTECTED/PrescientME/raw/ME50349/surveys/ME50349_eeg_run_sheet.csv')
+        target_df_loc.parent.mkdir(exist_ok=True, parents=True)
+        get_run_sheets_for_datatypes(target_df_loc)

@@ -1,20 +1,23 @@
-import os
-import yaml
-import lochness
-import logging
-import zipfile
-import shutil
-from pathlib import Path
-import tempfile as tf
+"""
+Module to import data from RPMS
+"""
 import collections as col
+import logging
+import os
+import re
+import shutil
+from datetime import datetime
+from pathlib import Path
+from time import sleep
+from typing import Dict, List, Union
+
+import pandas as pd
+import yaml
+
 import lochness.net as net
 import lochness.tree as tree
-from typing import List, Dict, Union
-import pandas as pd
-from datetime import datetime
-from time import sleep
-import re
-from lochness.redcap.process_piis import process_and_copy_db
+from lochness.db.crawlers import metadata as metadata_crawler
+
 pd.set_option('mode.chained_assignment', None)
 
 
@@ -355,6 +358,13 @@ def initialize_metadata(Lochness: 'Lochness object',
     main_cols = ['Active', 'Consent', 'Subject ID']
     df_final = df_final[main_cols + \
             [x for x in df_final.columns if x not in main_cols]]
+
+    # import into DB
+    metadata_crawler.import_metadata_df(
+        lochness_config=Lochness,
+        metadata_df=df_final,
+        study_id=study_name
+    )
 
     general_path = Path(Lochness['phoenix_root']) / 'PROTECTED'
     metadata_study = general_path / study_name / f"{study_name}_metadata.csv"

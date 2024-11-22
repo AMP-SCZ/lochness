@@ -176,8 +176,8 @@ def initialize_metadata(Lochness: 'Lochness object',
         # Redcap default information
         subject_dict['REDCap'] = \
                 f'redcap.{project_name}:{subject_id}'
-        subject_dict['REDCap'] += \
-                f';redcap.UPENN:{row[redcap_id_colname]}'  # UPENN REDCAP
+        # subject_dict['REDCap'] += \
+                # f';redcap.UPENN:{row[redcap_id_colname]}'  # UPENN REDCAP
         subject_dict['REDCap'] += \
                 f';redcap.UPENN_nda:{row[redcap_id_colname]}'  # UPENN REDCAP
         subject_dict['Box'] = f'box.{study_name}:{subject_id}'
@@ -333,8 +333,8 @@ def initialize_metadata_rm(Lochness: 'Lochness object',
         # Redcap default information
         subject_dict['REDCap'] = \
                 f'redcap.{project_name}:{subject_id}'
-        subject_dict['REDCap'] += \
-                f';redcap.UPENN:{subject_id}'  # UPENN REDCAP
+        # subject_dict['REDCap'] += \
+                # f';redcap.UPENN:{subject_id}'  # UPENN REDCAP
         subject_dict['REDCap'] += \
                 f';redcap.UPENN_new:{subject_id}'  # UPENN REDCAP
         subject_dict['Box'] = f'box.{study_name}:{subject_id}'
@@ -903,8 +903,9 @@ def post_to_redcap(api_url, data, debug_tup):
 
     # verify response content integrity
     if 'content-length' not in r.headers:
-        logger.warn('server did not return a content-length header, '
-                    f'can\'t verify response integrity for {debug_tup}')
+        logger.warn(
+                f'server ({api_url}) did not return a content-length '
+                f'header, can\'t verify response integrity for {debug_tup}')
     else:
         expected_len = int(r.headers['content-length'])
         if content_len != expected_len:

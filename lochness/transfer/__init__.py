@@ -625,6 +625,7 @@ def lochness_to_lochness_transfer_s3_protected(Lochness,
                                                      sites):
                     pass
                 lochness_s3_dir(Lochness, source_directory)
+
             logger.debug(f'aws rsync completed: {source_directory}')
 
         logger.debug(f'aws rsync completed "{datatype}" datatype')

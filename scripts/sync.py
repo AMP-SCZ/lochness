@@ -326,11 +326,6 @@ def do(args, Lochness):
                                      subject, dry=args.dry)
         n += 1
 
-    # anonymize PII
-    
-    if 'xnat' == source:
-        return
-
     #if Lochness['s3_selective_sync']:
     #    dpanonymize.lock_lochness(
     #            Lochness,
@@ -365,6 +360,9 @@ def do(args, Lochness):
             lochness_to_lochness_transfer_sftp(Lochness)
 
     logger.info('A round of sync completed')
+
+    if 'xnat' == source:
+        return
 
 
 if __name__ == '__main__':

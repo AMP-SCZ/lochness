@@ -211,7 +211,7 @@ def download_xnat_session_dataorc(
     command = ' '.join(command_array)
     logger.info(f'Executing command: {command}')
 
-    child = pexpect.spawn(command)
+    child = pexpect.spawn(command, use_poll=True)
     child.expect("Please enter your username:", timeout=10)
     child.sendline(xnat_username)
     child.expect("Please enter your password:", timeout=10)
@@ -288,6 +288,7 @@ def sync_xnatpy(Lochness, subject, dry=False, args=None):
 
             if os.path.exists(dst):
                 logger.debug('Already downloaded')
+                lochness_s3_dir(Lochness, Path(dst).parent)
                 continue
 
             message = 'downloading {PROJECT}/{LABEL} to {FOLDER}'

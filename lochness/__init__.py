@@ -394,7 +394,8 @@ def attempt(f, Lochness, *args, **kwargs):
     '''
 
     try:
-        f(Lochness, *args, **kwargs)
+        output = f(Lochness, *args, **kwargs)
+        return output
     except Exception as e:
         logger.warn(e)
         logger.debug(tb.format_exc().strip())

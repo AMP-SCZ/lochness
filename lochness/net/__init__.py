@@ -13,7 +13,7 @@ class retry(object):
             attempt = 1
             while True:
                 try:
-                    f(*args, **kwargs)
+                    return f(*args, **kwargs)
                     break
                 except requests.exceptions.ConnectionError as e:
                     attempt += 1

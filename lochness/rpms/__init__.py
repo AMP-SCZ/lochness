@@ -95,7 +95,8 @@ def get_rpms_database(rpms_root_path: str) -> Dict[str, pd.DataFrame]:
                     # they are exported by RPMS and modified by Tashrif's programs
                     # during this window
                     _wait()
-                    df_tmp = pd.read_csv(row.measure_file, dtype=str)
+                    df_tmp = pd.read_csv(row.measure_file, dtype=str,
+                                         keep_default_na=False)
                 except pd.errors.EmptyDataError:  # ignore csv is empty
                     shutil.move(row.measure_file,
                                 rpms_old_files_root / row.measure_file.name)
@@ -444,9 +445,11 @@ def sync(Lochness, subject, dry=False):
             # drop the index before the comparison to target_df
             same_df = source_df.reset_index(drop=True).equals(prev_df)
             if same_df:
+                print('same file')
                 continue
 
         if not dry:
+            print('downloading file')
             Path(dirname).mkdir(exist_ok=True)
             #os.chmod(dirname, 0o0755)
             source_df.to_csv(target_df_loc, index=False)

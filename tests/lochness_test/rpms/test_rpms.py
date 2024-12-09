@@ -347,3 +347,30 @@ def test_get_run_sheets_for_datatypes():
         target_df_loc = Path('/var/lib/prescient/data/PHOENIX/PROTECTED/PrescientME/raw/ME50349/surveys/ME50349_eeg_run_sheet.csv')
         target_df_loc.parent.mkdir(exist_ok=True, parents=True)
         get_run_sheets_for_datatypes(target_df_loc)
+
+
+
+def test_gets_subject_data_investigate_NA():
+    class SubjectTest(object):
+        pass
+    rpms_root_path = '/var/lib/prescient/RPMS_incoming'
+    all_df_dict = get_rpms_database(rpms_root_path)
+    subject = SubjectTest()
+    subject.id = 'ME41734'
+    id_colname = 'subjectkey'
+    subject_df_dict = get_subject_data(all_df_dict, subject, id_colname)
+    for key, table in subject_df_dict.items():
+        if key == 'family_interview_for_genetic_studies_figs':
+            print(table.columns)
+            print(table)
+            print(table.chrfigs_father_s05)
+            table.to_csv('test.csv')
+
+
+
+def test_pandas():
+    print(pd.__version__)
+    df_loc = '/var/lib/prescient/RPMS_incoming/PrescientStudy_Prescient_family_interview_for_genetic_studies_figs_09.12.2024.csv'
+    df = pd.read_csv(df_loc, dtype=str, keep_default_na=False)
+    print(df)
+    print(df[df['subjectkey'] == 'ME41734']['chrfigs_father_s05'])

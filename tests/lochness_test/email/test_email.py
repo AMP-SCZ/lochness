@@ -58,16 +58,18 @@ def test_box_sync_module_mailx(args_and_Lochness_BIDS):
 def test_email_size():
     config_loc = '/var/lib/prescient/lochness_configs/config.yml'
     Lochness = load(config_loc)
-    Lochness['sender'] = 'kevincho@bwh.harvard.edu'
+    Lochness['sender'] = 'kevincho@mindlamp.meg-infrastructure.cloud.edu.au'
 
-    Lochness['notify']['test'] = ['kevincho@bwh.harvard.edu']
+    Lochness['notify']['test'] = ['kevincho@bwh.harvard.edu', 'beau-luke.colton@orygen.org.au']
     send_out_daily_updates(Lochness)
 
 
 def test_send_new_server():
     recipients = ['kevincho@bwh.harvard.edu', 'dmohandass@mgh.harvard.edu',
                   'sylvain.bouix@etsmtl.ca']
+    recipients = ['kevincho@bwh.harvard.edu', 'beau-luke.colton@orygen.org.au']
     sender = 'kevincho@bwh.harvard.edu'
+    sender = 'kevincho@mindlamp.meg-infrastructure.cloud.edu.au'
     subject = 'email test'
     message = 'let me know if you receive this'
     send(recipients, sender, subject, message)

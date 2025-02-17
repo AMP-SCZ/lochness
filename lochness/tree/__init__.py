@@ -126,8 +126,16 @@ def get(data_type, base, **kwargs):
                            str(processed_folder)))
         Path(protected_str).mkdir(exist_ok=True, parents=True)
         Path(general_str).mkdir(exist_ok=True, parents=True)
-        os.chmod(protected_str, 0o00770)
-        os.chmod(general_str, 0o00770)
+        try:
+            os.chmod(protected_str, 0o00770)
+        except Exception as e:
+            logger.debug(e)
+            pass
+        try:
+            os.chmod(general_str, 0o00770)
+        except Exception as e:
+            logger.debug(e)
+            pass
 
         for path in protected_str, general_str:
             if not (path / '.log').is_file():

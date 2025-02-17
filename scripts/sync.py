@@ -61,7 +61,7 @@ def sync_lock(args, Lochness) -> None:
 
     logger.info('Loading sync lock history db')
     if sync_lock.is_file():
-        sync_lock_df = pd.read_csv(sync_lock)
+        sync_lock_df = pd.read_csv(sync_lock, index_col=0)
     else:
         sync_lock_df = pd.DataFrame(
                 columns=['file_path',

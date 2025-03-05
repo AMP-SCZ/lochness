@@ -148,8 +148,22 @@ def get(data_type, base, **kwargs):
         general_str = Path(re.sub('GENERAL', 'PROTECTED', str(raw_folder)))
         protected_str.mkdir(exist_ok=True, parents=True)
         general_str.mkdir(exist_ok=True, parents=True)
-        os.chmod(protected_str, 0o00770)
-        os.chmod(general_str, 0o00770)
+
+        try:
+            os.chmod(protected_str, 0o00770)
+        except PermissionError as e:
+            logger.error(e)
+            logger.error(f"Permission issue: continuing "
+                         "without permission change")
+            pass
+
+        try:
+            os.chmod(general_str, 0o00770)
+        except PermissionError as e:
+            logger.error(e)
+            logger.error(f"Permission issue: continuing "
+                         "without permission change")
+            pass
 
         for path in protected_str, general_str:
             if not (path / '.log').is_file():

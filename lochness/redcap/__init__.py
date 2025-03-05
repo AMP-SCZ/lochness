@@ -1,21 +1,23 @@
-import os
-import sys
-import re
-import json
-import lochness
-import logging
-import requests
-import lochness.net as net
 import collections as col
-import lochness.tree as tree
-from pathlib import Path
-import pandas as pd
 import datetime
-from typing import List, Union
+import json
+import logging
+import os
+import re
+import sys
 import tempfile as tf
-from lochness.redcap.process_piis import process_and_copy_db
+from pathlib import Path
+from typing import List, Union
 
+import pandas as pd
+import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+import lochness
+import lochness.net as net
+import lochness.tree as tree
+from lochness.db.crawlers import metadata as metadata_crawler
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -210,6 +212,13 @@ def initialize_metadata(Lochness: 'Lochness object',
         target_df = pd.DataFrame()
 
     same_df = df.reset_index(drop=True).equals(target_df)
+
+    # import into DB
+    metadata_crawler.import_metadata_df(
+        lochness_config=Lochness,
+        metadata_df=df,
+        study_id=study_name
+    )
 
     if same_df:
         pass

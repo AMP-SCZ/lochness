@@ -124,6 +124,9 @@ def sync(Lochness: 'lochness.config',
                           processed=False,
                           BIDS=Lochness['BIDS'],
                           makedirs=True)
+    
+    IGNORE_CHECKSUM_DAYS = 5
+    # if the data is newer than IGNORE_CHECKSUM_DAYS, do not create checksum
 
     # the loop below downloads all data from mindlamp from the current date
     # to (current date - 100 days), overwriting pre-downloaded files.
@@ -134,6 +137,11 @@ def sync(Lochness: 'lochness.config',
         time_utc_00_ts = time.mktime(time_utc_00.timetuple()) * 1000
         time_utc_24 = time_utc_00 + timedelta(hours=24)
         time_utc_24_ts = time.mktime(time_utc_24.timetuple()) * 1000
+
+        if days_from_ct <= IGNORE_CHECKSUM_DAYS:
+            recent_data = True
+        else:
+            recent_data = False
 
         # if the before consent_date, do not download the data
         if consent_date > time_utc_00:
@@ -148,6 +156,11 @@ def sync(Lochness: 'lochness.config',
         for data_name in ['activity', 'sensor']:
             dst = Path(dst_folder) / \
                 f'{subject_id}_{subject.study}_{data_name}_{date_str}.json'
+            
+            if Path(dst).is_file():
+                file_already_exists = True
+            else:
+                file_already_exists = False
 
             function_to_execute = get_activity_events_lamp \
                 if data_name == 'activity' else get_sensor_events_lamp
@@ -158,17 +171,17 @@ def sync(Lochness: 'lochness.config',
 
             prev_file_sha256 = ''  # set previous sha as empty
             checksum_file = dst.parent / f'.check_sum_{dst.name}'
-            if days_from_ct >= 2 and Path(dst).is_file():
-                # if the days_from_ct is more than two days, the mindlmap data
-                # on the mindlamp server should not change, thus no need to
-                # re-download data for checking checksum.
+            if not recent_data and file_already_exists:
+                # if the days_from_ct is more than IGNORE_CHECKSUM_DAYS days, 
+                # the mindlmap data on the mindlamp server should not change, 
+                # thus no need to re-download data for checking checksum.
                 if checksum_file.is_file():
                     logger.debug(f'{data_name} data has been downloaded for '
                                  f'{date_str} - skip downloading')
                     continue
 
-            elif days_from_ct < 2 and Path(dst).is_file():
-                # potentially within 24 hours from the data acquisition, data
+            elif recent_data and file_already_exists:
+                # potentially within 24 * IGNORE_CHECKSUM_DAYS hours from the data acquisition, data
                 # may change so check if there is any changes in the data on
                 # the source
                 if checksum_file.is_file():
@@ -218,8 +231,12 @@ def sync(Lochness: 'lochness.config',
                 if new_file_sha256 == prev_file_sha256:
                     continue
                 else:
-                    with open(checksum_file, 'w') as fp:
-                        fp.write(new_file_sha256)
+                    if not recent_data:
+                        # if the file is not recent, write the checksum
+                        with open(checksum_file, 'w') as fp:
+                            fp.write(new_file_sha256)
+                    # Do not create checksum for recent data to re-download
+                    # data on next sync
 
             lochness.atomic_write(dst, content)
             logger.debug(f'Mindlamp {data_name} data is saved for '
